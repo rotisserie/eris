@@ -1,0 +1,2 @@
+# eris 😈
+Golang error utilities
