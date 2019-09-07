@@ -1,15 +1,13 @@
-package eris_test
+package eris
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/morningvera/eris"
 )
 
 func TestError(t *testing.T) {
-	err := eris.New("test error")
-	wrapErr := eris.Wrap(err, "additional context")
+	err := New("test error")
+	wrapErr := Wrap(err, "additional context")
 	assert.Equal(t, wrapErr.Error(), "additional context: test error")
 }
