@@ -1,6 +1,6 @@
 package eris
 
-type Printer interface() {
+type Printer interface {
 	Print(e error)
 }
 
