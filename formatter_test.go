@@ -6,25 +6,48 @@ import (
 )
 
 func TestNewDefaultFormatter(t *testing.T) {
+	type args struct {
+		withTrace bool
+	}
 	tests := []struct {
 		name string
-		want *format
+		args args
+		want *defaultFormatter
 	}{
 		{
-			"DefaultFormatter",
-			&format{
-				msg:       " (",
-				op:        ":",
-				ln:        ":",
-				fpath:     ":",
-				sep:       ")/n",
+			"DefaultFormatter (Without Trace)",
+			args{
+				withTrace: false,
+			},
+			&defaultFormatter{
+				fmt: format{
+					msg:      " ",
+					traceFmt: nil,
+					sep:      "\n",
+				},
+			},
+		},
+		{
+			"DefaultFormatter (With Trace)",
+			args{
 				withTrace: true,
+			},
+			&defaultFormatter{
+				fmt: format{
+					msg:      " ",
+					traceFmt: &traceFormat{
+						tBeg: "(",
+						sep:  ": ",
+						tEnd: ")",
+					},
+					sep:      "\n",
+				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewDefaultFormatter(); !reflect.DeepEqual(got, tt.want) {
+			if got := NewDefaultFormatter(tt.args.withTrace); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewDefaultFormatter() = %v, want %v", got, tt.want)
 			}
 		})
