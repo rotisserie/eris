@@ -1,5 +1,9 @@
 package eris
 
+type formatter interface {
+	GetFormat() *format
+}
+
 // format holds formatting definitions for error message, trace and their separator
 type format struct {
 	msg      string
@@ -28,17 +32,28 @@ type jsonFormatter struct {
 func NewDefaultFormatter(withTrace bool) *defaultFormatter {
 	defaultFmtr := defaultFormatter{
 		fmt: format{
-			msg:      " ",
+			msg:      ": ",
 			traceFmt: nil,
-			sep:      "\n",
+			sep:      "",
 		},
 	}
+
 	if withTrace {
+		defaultFmtr.fmt.msg = "\n"
 		defaultFmtr.fmt.traceFmt = &traceFormat{
-			tBeg: "(",
-			sep:  ": ",
-			tEnd: ")",
+			tBeg: "\t",
+			sep:  ":",
+			tEnd: "\n",
 		}
 	}
+
 	return &defaultFmtr
+}
+
+func (f *defaultFormatter) GetFormat() *format {
+	return &f.fmt
+}
+
+func (f *jsonFormatter) GetFormat() *format {
+	return &f.fmt
 }

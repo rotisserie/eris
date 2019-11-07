@@ -8,6 +8,12 @@ import (
 // frame is a single program counter of a stack frame.
 type frame uintptr
 
+type stackFrame struct {
+	name string
+	file string
+	line int
+}
+
 func caller() *frame {
 	pc, _, _, _ := runtime.Caller(2)
 	var f frame = frame(pc)
@@ -18,33 +24,25 @@ func (f frame) pc() uintptr {
 	return uintptr(f) - 1
 }
 
-func (f frame) file() string {
+func (f frame) get() *stackFrame {
 	fn := runtime.FuncForPC(f.pc())
 	if fn == nil {
-		return "unknown"
+		return &stackFrame{
+			name: "unknown",
+			file: "unknown",
+		}
 	}
-	file, _ := fn.FileLine(f.pc())
-	return file
-}
 
-func (f frame) line() int {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
-		return 0
-	}
-	_, line := fn.FileLine(f.pc())
-	return line
-}
-
-func (f frame) name() string {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
-		return "unknown"
-	}
 	name := fn.Name()
 	i := strings.LastIndex(name, "/")
 	name = name[i+1:]
-	return name
+	file, line := fn.FileLine(f.pc())
+
+	return &stackFrame{
+		name: name,
+		file: file,
+		line: line,
+	}
 }
 
 // stack is an array of program counters.
