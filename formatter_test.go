@@ -21,9 +21,9 @@ func TestNewDefaultFormatter(t *testing.T) {
 			},
 			&defaultFormatter{
 				fmt: format{
-					msg:      " ",
+					msg:      "",
 					traceFmt: nil,
-					sep:      "\n",
+					sep:      "",
 				},
 			},
 		},
@@ -34,13 +34,13 @@ func TestNewDefaultFormatter(t *testing.T) {
 			},
 			&defaultFormatter{
 				fmt: format{
-					msg:      " ",
+					msg: " ",
 					traceFmt: &traceFormat{
 						tBeg: "(",
 						sep:  ": ",
-						tEnd: ")",
+						tEnd: ")\n",
 					},
-					sep:      "\n",
+					sep: "",
 				},
 			},
 		},

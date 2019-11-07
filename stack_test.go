@@ -15,11 +15,12 @@ var (
 func TestErrorStack(t *testing.T) {
 	// Testing stack with New
 	err := ErrorUsingNew()
-	fmt.Println("error output (new):", err)
+	fmt.Println("error output (new):\n", err)
 
 	// Testing stack with globals
 	err = ErrorUsingGlobal()
-	fmt.Println("error output (global):", err)
+	fmt.Println("error output (global):\n", err)
+	fmt.Println("error output after wrapping:\n", BadRequest)
 }
 
 func RootErrorNew() error {
