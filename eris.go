@@ -1,4 +1,5 @@
-// todo: add general eris intro here with explanations for all of the error types
+// todo: copy parts of readme text here once the examples are done
+//       also want to go more in depth on certain things
 package eris
 
 import (
@@ -25,7 +26,7 @@ func Errorf(format string, args ...interface{}) error {
 //
 // This method behaves differently for each error type. For root errors, the stack trace is reset to the current
 // callers which ensures traces are correct when using global/sentinel error values. Wrapped error types are simply
-// wrapped with the new context. For non-eris types (i.e. something other than root or wrap errors), a new root
+// wrapped with the new context. For external types (i.e. something other than root or wrap errors), a new root
 // error is created for the original error and then it's wrapped with the additional context.
 func Wrap(err error, msg string) error {
 	return wrap(err, msg)
