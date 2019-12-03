@@ -49,4 +49,4 @@ if eris.Cause(err) == NotFound {
 
 ## Contributing
 
-If you'd like to contribute to `eris`, we'd love to have your input! Please submit an issue first so we can discuss your proposal.
+If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal.
