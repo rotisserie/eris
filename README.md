@@ -20,7 +20,7 @@ Output formatting is designed to be more flexible in `eris`. Currently, string a
 
 `eris` is concerned with only three different types of errors: root errors, wrap errors, and external errors. Root and wrap errors are defined types in this package and all other error types are external or third-party errors.
 
-Root errors are created via `eris.New` and `eris.Errorf` and are defined as the root cause of an error. Generally, it's a good idea to maintain a set of root errors that are then wrapped with additional context whenever an error of that type occurs. Wrap errors represent a stack of errors that have been wrapped with additional context. Unwrapping these errors via `eris.Unwrap` will return the next error in the stack until a root error is reached. `eris.Cause` will also retrieve the root error.
+Root errors are created via `eris.New` and `eris.Errorf`. Generally, it's a good idea to maintain a set of root errors that are then wrapped with additional context whenever an error of that type occurs. Wrap errors represent a stack of errors that have been wrapped with additional context. Unwrapping these errors via `eris.Unwrap` will return the next error in the stack until a root error is reached. `eris.Cause` will also retrieve the root error.
 
 When external error types are wrapped with additional context, a root error is first created from the original error. This creates a stack trace for the error and allows it to function with the rest of the `eris` package.
 
@@ -49,7 +49,7 @@ if eris.Is(err, NotFound) || eris.Cause(err) == NotFound {
 
 ## Migrating to eris
 
-Migrating to `eris` should be a very simple process. If it doesn't offer something that you currently use from existing error packages, feel free to submit an issue to us. If you don't want to refactor all of your error handling yet, `eris` should still work seamlessly with your existing error types. Please submit an issue if this isn't the case for some reason.
+Migrating to `eris` should be a very simple process. If it doesn't offer something that you currently use from existing error packages, feel free to submit an issue to us. If you don't want to refactor all of your error handling yet, `eris` should work relatively seamlessly with your existing error types. Please submit an issue if this isn't the case for some reason.
 
 ## Contributing
 
