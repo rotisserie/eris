@@ -1,89 +1,117 @@
 package eris_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/morningvera/eris"
-	"github.com/stretchr/testify/assert"
 )
 
-// todo: need to fix error printing before this will work properly
+func setupTestCase(wrapf bool, cause error, input []string) error {
+	err := cause
+	for _, str := range input {
+		if wrapf {
+			err = eris.Wrapf(err, "%v", str)
+		} else {
+			err = eris.Wrap(err, str)
+		}
+	}
+	return err
+}
+
 func TestErrorWrapping(t *testing.T) {
 	tests := map[string]struct {
 		cause  error    // root error
-		input  []string // input messages for error wrapping
-		output string   // expected output error string
+		input  []string // input for error wrapping
+		output string   // expected output
 	}{
-		// "nil root error": {
-		// 	cause: nil,
-		// 	input: []string{"additional context"},
-		// },
-		"standard error wrapping": {
+		"nil root error": {
+			cause: nil,
+			input: []string{"additional context"},
+		},
+		"standard error wrapping with internal root cause (eris.New)": {
 			cause:  eris.New("root error"),
 			input:  []string{"additional context", "even more context"},
 			output: "even more context: additional context: root error",
 		},
-		// "standard error wrapping using non-eris types": {
-		// cause:
-		// input:
-		// output:
-		// }
+		"standard error wrapping with external root cause (errors.New)": {
+			cause:  errors.New("external error"),
+			input:  []string{"additional context", "even more context"},
+			output: "even more context: additional context: external error",
+		},
+		"no error wrapping with internal root cause (eris.Errorf)": {
+			cause:  eris.Errorf("%v", "root error"),
+			output: "root error",
+		},
+		"no error wrapping with external root cause (errors.New)": {
+			cause:  errors.New("external error"),
+			output: "external error",
+		},
 	}
 
-	// todo: (maybe) create a generic func that takes in test cases and a closure
 	for desc, tc := range tests {
-		tc := tc
-		t.Run(desc, func(t *testing.T) {
-			t.Parallel()
-			err := tc.cause
-			for _, str := range tc.input {
-				err = eris.Wrap(err, str)
-			}
-			fmt.Println("error:")
-			fmt.Println(err)
-			fmt.Println(err.Error())
-			fmt.Println(fmt.Sprintf("%+v", err))
-			if tc.cause == nil {
-				assert.Nilf(t, err, "%v: wrapping nil errors should return nil but got { %v }", desc, err)
-			} else {
-				assert.Equalf(t, tc.output, err.Error(), "%v: expected { %v } got { %v }", desc, tc.output, err)
-			}
-		})
+		err := setupTestCase(false, tc.cause, tc.input)
+		if err != nil && tc.cause == nil {
+			t.Errorf("%v: wrapping nil errors should return nil but got { %v }", desc, err)
+		} else if err != nil && tc.output != err.Error() {
+			t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, err.Error())
+		}
+
+		// Default printing
+		defaultPrinter := eris.NewDefaultPrinter(eris.NewDefaultFormat(true))
+		fmt.Printf("\nDefault error output (%v):\n%v", desc, defaultPrinter.Sprint(err))
+
+		// JSON printing
+		jsonPrinter := eris.NewJSONPrinter(eris.NewDefaultFormat(true))
+		fmt.Printf("\nJSON error output (%v):\n%v\n", desc, jsonPrinter.Sprint(err))
 	}
 }
 
-// todo: test Is/Cause here
-func TestErrorComparisons(t *testing.T) {
+func TestErrorUnwrap(t *testing.T) {
 	tests := map[string]struct {
 		cause  error    // root error
-		input  []string // input messages for error wrapping
-		output string   // expected output error string
+		input  []string // input for error wrapping
+		output []string // expected output
 	}{
-		// "nil root error": {
-		// 	cause: nil,
-		// 	input: []string{"additional context"},
-		// },
-		// "standard error wrapping": {
-		// 	cause:  eris.New("root error"),
-		// 	input:  []string{"additional context", "even more context"},
-		// 	output: "even more context: additional context: root error",
-		// },
+		"unwrapping error with internal root cause (eris.New)": {
+			cause: eris.New("root error"),
+			input: []string{"additional context", "even more context"},
+			output: []string{
+				"even more context: additional context: root error",
+				"additional context: root error",
+				"root error",
+			},
+		},
+		"unwrapping error with external root cause (errors.New)": {
+			cause: errors.New("external error"),
+			input: []string{"additional context", "even more context"},
+			output: []string{
+				"even more context: additional context: external error",
+				"additional context: external error",
+				"external error",
+			},
+		},
 	}
 
 	for desc, tc := range tests {
-		tc := tc
-		t.Run(desc, func(t *testing.T) {
-			t.Parallel()
-			err := tc.cause
-			for _, str := range tc.input {
-				err = eris.Wrap(err, str)
+		err := setupTestCase(true, tc.cause, tc.input)
+		for _, out := range tc.output {
+			if err == nil {
+				t.Errorf("%v: unwrapping error returned nil but expected { %v }", desc, out)
+			} else if out != err.Error() {
+				t.Errorf("%v: expected { %v } got { %v }", desc, out, err.Error())
 			}
-			if tc.cause == nil {
-				assert.Nilf(t, err, "%v: wrapping nil errors should return nil but got { %v }", desc, err)
-			} else {
-				assert.Equalf(t, tc.output, err.Error(), "%v: expected { %v } got { %v }", desc, tc.output, err)
-			}
-		})
+			err = eris.Unwrap(err)
+		}
 	}
 }
+
+// todo: err.Is()
+func TestErrorIs(t *testing.T) {}
+
+// todo: err.Cause()
+func TestErrorCause(t *testing.T) {}
+
+// todo: err.Error(), fmt.Sprint(err), fmt.Sprintf("%v", err), fmt.Sprintf("%+v", err), etc.
+func TestErrorFormatting(t *testing.T) {}

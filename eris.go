@@ -4,6 +4,7 @@ package eris
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 )
 
@@ -11,7 +12,7 @@ import (
 func New(msg string) error {
 	return &rootError{
 		msg:   msg,
-		stack: callers(),
+		stack: callers(3),
 	}
 }
 
@@ -19,7 +20,7 @@ func New(msg string) error {
 func Errorf(format string, args ...interface{}) error {
 	return &rootError{
 		msg:   fmt.Sprintf(format, args...),
-		stack: callers(),
+		stack: callers(3),
 	}
 }
 
@@ -47,16 +48,19 @@ func wrap(err error, msg string) error {
 
 	switch e := err.(type) {
 	case *rootError:
-		e.stack = callers()
+		e.stack = callers(4)
 	case *wrapError:
 	default:
-		err = New(e.Error())
+		err = &rootError{
+			msg:   e.Error(),
+			stack: callers(4),
+		}
 	}
 
 	return &wrapError{
 		msg:   msg,
 		err:   err,
-		frame: caller(),
+		frame: caller(3),
 	}
 }
 
@@ -126,8 +130,8 @@ func (e *rootError) Format(s fmt.State, verb rune) {
 			withTrace = true
 		}
 	}
-	fmtr := NewDefaultFormatter(withTrace)
-	Print(e, fmtr)
+	p := NewDefaultPrinter(NewDefaultFormat(withTrace))
+	io.WriteString(s, p.Sprint(e))
 }
 
 type wrapError struct {
@@ -148,8 +152,8 @@ func (e *wrapError) Format(s fmt.State, verb rune) {
 			withTrace = true
 		}
 	}
-	fmtr := NewDefaultFormatter(withTrace) // todo: formatting without trace is messed up
-	Print(e, fmtr)
+	p := NewDefaultPrinter(NewDefaultFormat(withTrace))
+	io.WriteString(s, p.Sprint(e))
 }
 
 func (e *wrapError) Unwrap() error {
