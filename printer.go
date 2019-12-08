@@ -1,77 +1,179 @@
 package eris
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
-type Printer interface {
-	Print(e error)
+// Format defines an error output format to be used with the default printer.
+type Format struct {
+	WithTrace bool   // Flag that enables stack trace output.
+	Msg       string // Separator between error messages and stack frame data.
+	TBeg      string // Separator at the beginning of each stack frame.
+	TSep      string // Separator between elements of each stack frame.
+	Sep       string // Separator between each error in the chain.
 }
 
-func Print(e error, fmtr formatter) {
-	format := fmtr.GetFormat()
-	switch e.(type) {
-	case *wrapError:
-		format.printWrapError(e.(*wrapError))
-	case *rootError:
-		format.printRootError(e.(*rootError))
-	default:
-		format.printError(e)
+// NewDefaultFormat conveniently returns a basic format for the default string printer.
+func NewDefaultFormat(withTrace bool) Format {
+	stringFmt := Format{
+		WithTrace: withTrace,
+		Sep:       ": ",
+	}
+	if withTrace {
+		stringFmt.Msg = "\n"
+		stringFmt.TBeg = "\t"
+		stringFmt.TSep = ":"
+		stringFmt.Sep = "\n"
+	}
+	return stringFmt
+}
+
+// Printer defines a basic printer interface.
+type Printer interface {
+	// Sprint returns a formatted string for a given error.
+	Sprint(err error) string
+}
+
+type defaultPrinter struct {
+	format Format
+}
+
+// NewDefaultPrinter returns a basic printer that converts errors into strings.
+func NewDefaultPrinter(format Format) Printer {
+	return &defaultPrinter{
+		format: format,
 	}
 }
 
-func (format *format) printWrapError(err *wrapError) {
-	fmt.Print(err.msg)
-	fmt.Print(format.msg)
-	fmt.Print(err.frame.formatFrame(format))
-	fmt.Print(format.sep)
+// Sprint returns a default formatted string for a given error.
+func (p *defaultPrinter) Sprint(err error) string {
+	var str string
+	switch err.(type) {
+	case nil:
+		return ""
+	case *rootError:
+		str = p.printRootError(err.(*rootError))
+	case *wrapError:
+		str = p.printWrapError(err.(*wrapError))
+	default:
+		str = fmt.Sprint(err) + p.format.Sep
+	}
+	return str
+}
 
-	nextErr := err.Unwrap()
-	if nextErr == nil {
-		return
-	} else {
-		switch nextErr.(type) {
-		case *wrapError:
-			format.printWrapError(nextErr.(*wrapError))
-		case *rootError:
-			format.printRootError(nextErr.(*rootError))
-		default:
-			format.printError(nextErr)
+func (p *defaultPrinter) printRootError(err *rootError) string {
+	str := err.msg
+	str += p.format.Msg
+	if p.format.WithTrace {
+		stackArr := printStack(err.stack, p.format.TSep)
+		for _, frame := range stackArr {
+			str += p.format.TBeg
+			str += frame
+			str += p.format.Sep
 		}
 	}
+	return str
 }
 
-func (format *format) printRootError(err *rootError) {
-	fmt.Print(err.msg)
-	fmt.Print(format.msg)
+func (p *defaultPrinter) printWrapError(err *wrapError) string {
+	str := err.msg
+	str += p.format.Msg
+	if p.format.WithTrace {
+		str += p.format.TBeg
+		str += printFrame(err.frame, p.format.TSep)
+	}
+	str += p.format.Sep
 
-	// todo: maybe move the rest to a stack.format method
-	if format.traceFmt == nil {
-		fmt.Print(format.sep)
+	nextErr := err.Unwrap()
+	switch nextErr.(type) {
+	case nil:
+		return ""
+	case *rootError:
+		str += p.printRootError(nextErr.(*rootError))
+	case *wrapError:
+		str += p.printWrapError(nextErr.(*wrapError))
+	default:
+		str += fmt.Sprint(nextErr) + p.format.Sep
 	}
 
-	for _, f := range *err.stack {
+	return str
+}
+
+type jsonPrinter struct {
+	format Format
+}
+
+// NewJSONPrinter returns a basic printer that converts errors into JSON formatted strings.
+func NewJSONPrinter(format Format) Printer {
+	return &jsonPrinter{
+		format: format,
+	}
+}
+
+// Sprint returns a JSON formatted string for a given error.
+func (p *jsonPrinter) Sprint(err error) string {
+	jsonMap := make(map[string]interface{})
+	switch err.(type) {
+	case nil:
+		return "{}"
+	case *rootError:
+		jsonMap["error root"] = p.printRootError(err.(*rootError))
+	case *wrapError:
+		jsonMap = p.printWrapError(err.(*wrapError))
+	default:
+		jsonMap["external error"] = fmt.Sprint(err)
+	}
+	str, _ := json.Marshal(jsonMap)
+	return string(str)
+}
+
+func (p *jsonPrinter) printRootError(err *rootError) map[string]interface{} {
+	rootMap := make(map[string]interface{})
+	rootMap["message"] = fmt.Sprint(err.msg)
+	if p.format.WithTrace {
+		rootMap["stack"] = printStack(err.stack, p.format.TSep)
+	}
+	return rootMap
+}
+
+func (p *jsonPrinter) printWrapError(err *wrapError) map[string]interface{} {
+	jsonMap := make(map[string]interface{})
+
+	nextErr := error(err)
+	var wrapArr []map[string]interface{}
+	for {
+		if nextErr == nil {
+			break
+		} else if e, ok := nextErr.(*rootError); ok {
+			jsonMap["error root"] = p.printRootError(e)
+		} else if e, ok := nextErr.(*wrapError); ok {
+			wrapMap := make(map[string]interface{})
+			wrapMap["message"] = fmt.Sprint(e.msg)
+			if p.format.WithTrace {
+				wrapMap["stack"] = printFrame(e.frame, p.format.TSep)
+			}
+			wrapArr = append(wrapArr, wrapMap)
+		} else {
+			jsonMap["external error"] = fmt.Sprint(nextErr)
+		}
+		nextErr = Unwrap(nextErr)
+	}
+	jsonMap["error chain"] = wrapArr
+
+	return jsonMap
+}
+
+func printFrame(f *frame, sep string) string {
+	fData := f.get()
+	return fmt.Sprintf("%v%v%v%v%v", fData.name, sep, fData.file, sep, fData.line)
+}
+
+func printStack(s *stack, sep string) []string {
+	var str []string
+	for _, f := range *s {
 		frame := frame(f)
-		s := frame.formatFrame(format)
-		fmt.Print(s)
+		str = append(str, printFrame(&frame, sep))
 	}
-	fmt.Print(format.sep)
-}
-
-func (format *format) printError(err error) {
-	fmt.Print(err)
-}
-
-// todo: should this be moved to stack.go?
-func (f frame) formatFrame(format *format) string {
-	var s string
-	if format.traceFmt == nil {
-		s = fmt.Sprintf("%v", format.sep)
-	} else {
-		fdata := f.get()
-		traceSep := format.traceFmt.sep
-		s = fmt.Sprintf("%v%v%v%v%v%v%v", format.traceFmt.tBeg, fdata.name, traceSep,
-			fdata.file, traceSep, fdata.line, format.traceFmt.tEnd)
-	}
-	return s
+	return str
 }

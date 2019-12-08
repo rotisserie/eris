@@ -14,8 +14,8 @@ type stackFrame struct {
 	line int
 }
 
-func caller() *frame {
-	pc, _, _, _ := runtime.Caller(2)
+func caller(skip int) *frame {
+	pc, _, _, _ := runtime.Caller(skip)
 	var f frame = frame(pc)
 	return &f
 }
@@ -48,10 +48,10 @@ func (f frame) get() *stackFrame {
 // stack is an array of program counters.
 type stack []uintptr
 
-func callers() *stack {
+func callers(skip int) *stack {
 	const depth = 64
 	var pcs [depth]uintptr
-	n := runtime.Callers(3, pcs[:])
+	n := runtime.Callers(skip, pcs[:])
 	var st stack = pcs[0:n]
 	return &st
 }
