@@ -6,15 +6,13 @@ Package eris provides a better way to handle errors in Go. This package is inspi
 
 `go get github.com/morningvera/eris`
 
-Check out the [package docs](https://godoc.org/github.com/morningvera/eris) for more detailed information.
+Check out the [package docs](https://godoc.org/github.com/morningvera/eris) for more detailed information or connect with us on our [Slack channel](https://rotisserieworkspace.slack.com/archives/CS13EC3T6) if you want to discuss anything in depth.
 
 ## How is eris different?
 
-Named after the Greek goddess of strife, this package is intended to give you more control over error handling via error wrapping, stack traces, and output formatting. Basic error wrapping was added in Go 1.13, but it omitted user-friendly `Wrap` methods and built-in stack tracing. Other error packages provide some of the features found in `eris` but without flexible control over error output formatting.
+Named after the Greek goddess of strife and discord, this package is intended to give you more control over error handling via error wrapping, stack tracing, and output formatting. Basic error wrapping was added in Go 1.13, but it omitted user-friendly `Wrap` methods and built-in stack tracing. Other error packages provide some of the features found in `eris` but without flexible control over error output formatting. This package provides default string and JSON formatters with options to control things like separators and stack trace output. However, it also provides an option to write custom formatters via `eris.Unpack`.
 
 Error wrapping behaves somewhat differently than existing packages. It relies on root errors that contain a full stack trace and wrap errors that contain a single stack frame. When errors from other packages are wrapped, a root error is automatically created before wrapping it with the new context. This allows `eris` to work with other error packages transparently and elimates the need to manage stack traces manually. Unlike other packages, `eris` also works well with global error types by automatically updating stack traces during error wrapping.
-
-Output formatting is designed to be more flexible in `eris`. Currently, string and JSON formatters are provided with options to control things like separators and stack trace output. However, you're also free to implement custom formatters if these don't serve your needs.
 
 ## Types of errors
 
@@ -37,7 +35,7 @@ if err != nil {
 
 ## Inspecting error types
 
-The `eris` package provides a few ways to inspect and compare error types. `eris.Is` returns true if a particular error appears anywhere in the error chain, and `eris.Cause` returns the root cause of the error. These methods are basically interchangeable when used in conditionals.
+The `eris` package provides a few ways to inspect and compare error types. `eris.Is` returns true if a particular error appears anywhere in the error chain, and `eris.Cause` returns the root cause of the error. Currently, `eris.Is` works simply by comparing error messages with each other. If an error contains a particular error message anywhere in its chain (e.g. "not found"), it's defined to be that error type (i.e. `eris.Is` will return `true`).
 
 ```golang
 NotFound := eris.New("not found")
@@ -53,4 +51,4 @@ Migrating to `eris` should be a very simple process. If it doesn't offer somethi
 
 ## Contributing
 
-If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal.
+If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal. We're also available to discuss potential issues and features on our [Slack channel](https://rotisserieworkspace.slack.com/archives/CS13EC3T6).
