@@ -230,9 +230,10 @@ func TestErrorFormatting(t *testing.T) {
 			t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, err)
 		}
 
-		// todo: not sure how to automate stack trace verification
-		fmt.Printf("error formatting results (%v):\n", desc)
-		fmt.Printf("%v\n", err)
-		fmt.Printf("%+v", err)
+		// todo: automate stack trace verification
+		fmt.Sprintf("error formatting results (%v):\n", desc)
+		fmt.Sprintf("%v\n", err)
+		fmt.Sprintf("%+v", err)
+
 	}
 }
