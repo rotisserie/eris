@@ -290,5 +290,5 @@ func printError(err error, s fmt.State, verb rune) {
 	format := NewDefaultFormat(withTrace)
 	uErr := Unpack(err)
 	str := uErr.ToString(format)
-	io.WriteString(s, str)
+	_, _ = io.WriteString(s, str)
 }

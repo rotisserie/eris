@@ -231,8 +231,8 @@ func TestErrorFormatting(t *testing.T) {
 		}
 
 		// todo: automate stack trace verification
-		fmt.Sprintf("error formatting results (%v):\n", desc)
-		fmt.Sprintf("%v\n", err)
-		fmt.Sprintf("%+v", err)
+		_ = fmt.Sprintf("error formatting results (%v):\n", desc)
+		_ = fmt.Sprintf("%v\n", err)
+		_ = fmt.Sprintf("%+v", err)
 	}
 }
