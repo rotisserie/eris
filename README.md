@@ -1,12 +1,10 @@
-# eris 😈
+# eris ![minecraft golden apple](https://cdn.emojidex.com/emoji/hdpi/minecraft_golden_apple.png?1511637499 "minecraft golden apple")
 
-todo: add code coverage/report, CI links, etc.
-
-Package eris provides a better way to handle errors in Go. This package is inspired by a few existing packages: [xerrors](https://github.com/golang/xerrors), [pkg/errors](https://github.com/pkg/errors), and [Go 1.13 errors](https://golang.org/pkg/errors/).
+Package eris provides a better way to handle, trace, and log errors in Go. This package is inspired by a few existing packages: [xerrors](https://github.com/golang/xerrors), [pkg/errors](https://github.com/pkg/errors), and [Go 1.13 errors](https://golang.org/pkg/errors/).
 
 `go get github.com/rotisserie/eris`
 
-Check out the [package docs](https://godoc.org/github.com/rotisserie/eris) for more detailed information or connect with us on our [Slack channel](https://rotisserieworkspace.slack.com/archives/CS13EC3T6) if you want to discuss anything in depth.
+Check out the [package docs](https://godoc.org/github.com/rotisserie/eris) for more detailed information or connect with us on our [Slack channel](https://gorotisserie.slack.com/archives/CS13EC3T6) if you want to discuss anything in depth.
 
 ## How is eris different?
 
@@ -29,19 +27,88 @@ When external error types are wrapped with additional context, a root error is f
 ```golang
 _, err := db.Get(id)
 if err != nil {
+  // return the error with some useful context
   return eris.Wrapf(err, "error getting resource '%v'", id)
 }
 ```
 
 ## Inspecting error types
 
-The `eris` package provides a few ways to inspect and compare error types. `eris.Is` returns true if a particular error appears anywhere in the error chain, and `eris.Cause` returns the root cause of the error. Currently, `eris.Is` works simply by comparing error messages with each other. If an error contains a particular error message anywhere in its chain (e.g. "not found"), it's defined to be that error type (i.e. `eris.Is` will return `true`).
+The `eris` package provides a few ways to inspect and compare error types. [`eris.Is`](https://godoc.org/github.com/rotisserie/eris#Is) returns true if a particular error appears anywhere in the error chain, and `eris.Cause` returns the root cause of the error. Currently, `eris.Is` works simply by comparing error messages with each other. If an error contains a particular message anywhere in its chain (e.g. "not found"), it's defined to be that error type (i.e. `eris.Is` will return `true`).
 
 ```golang
 NotFound := eris.New("not found")
 _, err := db.Get(id)
+// check if the resource was not found
 if eris.Is(err, NotFound) || eris.Cause(err) == NotFound {
-  return eris.Wrapf(err, "resource '%v' not found", id)
+  // return the error with some useful context
+  return eris.Wrapf(err, "error getting resource '%v'", id)
+}
+```
+
+## Stack traces
+
+Errors created with this package contain stack traces that are managed automatically even when wrapping global errors or errors from other libraries. Stack traces are currently mandatory when creating and wrapping errors but optional when printing or logging errors. Printing an error with or without the stack trace is simple:
+
+```golang
+_, err := db.Get(id)
+if err != nil {
+  return eris.Wrapf(err, "error getting resource '%v'", id)
+}
+fmt.Printf("%v", err) // print without the stack trace
+fmt.Printf("%+v", err) // print with the stack trace
+```
+
+For an error that has been wrapped once, the output will look something like this:
+
+```
+# output without the stack trace
+error getting resource 'example-id': not found
+
+# output with the stack trace
+error getting resource 'example-id'
+  api.GetResource: /path/to/file/api.go: 30
+not found
+  api.GetResource: /path/to/file/api.go: 30
+  db.Get: /path/to/file/db.go: 99
+  runtime.goexit: /path/to/go/src/libexec/src/runtime/asm_amd64.s: 1337
+```
+
+The first layer of the full error output shows a message ("error getting resource 'example-id'") and a single stack frame. The next layer shows the root error ("not found") and the full stack trace.
+
+## Logging errors with more control
+
+While `eris` supports logging errors with Go's `fmt` package, it's often advantageous to use the provided string and JSON formatters instead. These methods provide much more control over the error output and should work seamlessly with whatever logging package you choose. The example below shows how to integrate `eris` with (logrus)[https://github.com/sirupsen/logrus].
+
+```golang
+var fields log.Fields
+unpackedErr := eris.Unpack(err)
+fields["method"] = "api.GetResource"
+fields["error"] = unpackedErr.ToJSON(eris.NewDefaultFormat(true))
+logger.WithFields(fields).Errorf("method completed with error (%v)", err)
+```
+
+When using a JSON logger, the output should look something like this:
+
+```json
+{
+  "method":"api.GetResource",
+  "error":{
+    "error chain":[
+      {
+        "message":"error getting resource 'example-id'",
+        "stack":"api.GetResource: /path/to/file/api.go: 30"
+      }
+    ],
+    "error root":{
+      "message":"not found",
+      "stack":[
+        "api.GetResource: /path/to/file/api.go: 30",
+        "db.Get: /path/to/file/db.go: 99",
+        "runtime.goexit: /path/to/go/src/runtime/asm_amd64.s: 1337"
+      ]
+    }
+  }
 }
 ```
 
@@ -51,4 +118,4 @@ Migrating to `eris` should be a very simple process. If it doesn't offer somethi
 
 ## Contributing
 
-If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal. We're also available to discuss potential issues and features on our [Slack channel](https://rotisserieworkspace.slack.com/archives/CS13EC3T6).
+If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal. We're also available to discuss potential issues and features on our [Slack channel](https://gorotisserie.slack.com/archives/CS13EC3T6).

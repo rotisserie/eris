@@ -234,6 +234,5 @@ func TestErrorFormatting(t *testing.T) {
 		fmt.Sprintf("error formatting results (%v):\n", desc)
 		fmt.Sprintf("%v\n", err)
 		fmt.Sprintf("%+v", err)
-
 	}
 }
