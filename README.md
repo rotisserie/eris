@@ -76,6 +76,36 @@ not found
 
 The first layer of the full error output shows a message ("error getting resource 'example-id'") and a single stack frame. The next layer shows the root error ("not found") and the full stack trace.
 
+## Formatted error printing
+
+The default format in `eris` is returned by the method [`NewDefaultFormat()`](https://godoc.org/github.com/morningvera/eris#NewDefaultFormat). Below you can see what a default formatted error in `eris` might look like.
+
+Errors printed without trace using `fmt.Printf("%v\n", err)`
+
+```
+even more context: additional context: root error
+```
+
+Errors printed with trace using `fmt.Printf("%+v\n", err)`
+
+```
+even more context
+        eris_test.setupTestCase: ../eris/eris_test.go: 17
+additional context
+        eris_test.setupTestCase: ../eris/eris_test.go: 17
+root error
+        eris_test.setupTestCase: ../eris/eris_test.go: 17
+        eris_test.TestErrorFormatting: ../eris/eris_test.go: 226
+        testing.tRunner: ../go1.11.4/src/testing/testing.go: 827
+        runtime.goexit: ../go1.11.4/src/runtime/asm_amd64.s: 1333
+```
+
+'eris' also provides developers a way to define a custom format to print the errors. The [`Format`](https://godoc.org/github.com/morningvera/eris#Format) object defines separators for various components of the error/trace and can be passed to utility methods for printing string and JSON formats.
+
+## Error Object
+
+The [`UnpackedError`](https://godoc.org/github.com/morningvera/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrChain` and `ErrRoot` fields correspond to `wrapError` and `rootError` types, respectively. If any other error type is unpacked, it will appear in the ExternalErr field. The [`Unpack()`](https://godoc.org/github.com/morningvera/eris#Unpack) method returns the corresponding `UnpackedError` object for a given error. This object can also be converted to string and JSON for logging and printing error traces. This can be done by using the methods [`ToString()`](https://godoc.org/github.com/morningvera/eris#UnpackedError.ToString) and [`ToJSON()`](https://godoc.org/github.com/morningvera/eris#UnpackedError.ToJSON). Note the `ToJSON()` method returns a `map[string]interface{}` type which can be marshalled to JSON using the `encoding/json` package.
+
 ## Logging errors with more control
 
 While `eris` supports logging errors with Go's `fmt` package, it's often advantageous to use the provided string and JSON formatters instead. These methods provide much more control over the error output and should work seamlessly with whatever logging package you choose. The example below shows how to integrate `eris` with (logrus)[https://github.com/sirupsen/logrus].
