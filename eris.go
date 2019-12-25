@@ -113,6 +113,19 @@ func Cause(err error) error {
 	}
 }
 
+func formatError(err error, s fmt.State, verb rune) {
+	var withTrace bool
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			withTrace = true
+		}
+	}
+	f := NewDefaultFormat(withTrace)
+	p := NewDefaultPrinter(f)
+	io.WriteString(s, p.Sprint(err))
+}
+
 type rootError struct {
 	msg   string
 	stack *stack
@@ -123,7 +136,7 @@ func (e *rootError) Error() string {
 }
 
 func (e *rootError) Format(s fmt.State, verb rune) {
-	printError(e, s, verb)
+	formatError(e, s, verb)
 }
 
 func (e *rootError) Is(target error) bool {
@@ -144,7 +157,7 @@ func (e *wrapError) Error() string {
 }
 
 func (e *wrapError) Format(s fmt.State, verb rune) {
-	printError(e, s, verb)
+	formatError(e, s, verb)
 }
 
 func (e *wrapError) Is(target error) bool {
@@ -156,18 +169,4 @@ func (e *wrapError) Is(target error) bool {
 
 func (e *wrapError) Unwrap() error {
 	return e.err
-}
-
-func printError(err error, s fmt.State, verb rune) {
-	var withTrace bool
-	switch verb {
-	case 'v':
-		if s.Flag('+') {
-			withTrace = true
-		}
-	}
-	format := NewDefaultFormat(withTrace)
-	uErr := Unpack(err)
-	str := uErr.ToString(format)
-	io.WriteString(s, str)
 }
