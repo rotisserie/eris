@@ -4,9 +4,9 @@ todo: add code coverage/report, CI links, etc.
 
 Package eris provides a better way to handle errors in Go. This package is inspired by a few existing packages: [xerrors](https://github.com/golang/xerrors), [pkg/errors](https://github.com/pkg/errors), and [Go 1.13 errors](https://golang.org/pkg/errors/).
 
-`go get github.com/morningvera/eris`
+`go get github.com/rotisserie/eris`
 
-Check out the [package docs](https://godoc.org/github.com/morningvera/eris) for more detailed information or connect with us on our [Slack channel](https://rotisserieworkspace.slack.com/archives/CS13EC3T6) if you want to discuss anything in depth.
+Check out the [package docs](https://godoc.org/github.com/rotisserie/eris) for more detailed information or connect with us on our [Slack channel](https://rotisserieworkspace.slack.com/archives/CS13EC3T6) if you want to discuss anything in depth.
 
 ## How is eris different?
 
