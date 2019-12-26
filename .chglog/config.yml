@@ -2,7 +2,7 @@ style: github
 template: CHANGELOG.tpl.md
 info:
   title: CHANGELOG
-  repository_url: https://github.com/morningvera/eris
+  repository_url: https://github.com/rotisserie/eris
 options:
   commits:
     filters:

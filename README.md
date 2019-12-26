@@ -8,7 +8,7 @@ Check out the [package docs](https://godoc.org/github.com/rotisserie/eris) for m
 
 ## How is eris different?
 
-Named after the Greek goddess of strife and discord, this package is intended to give you more control over error handling via error wrapping, stack tracing, and output formatting. Basic error wrapping was added in Go 1.13, but it omitted user-friendly `Wrap` methods and built-in stack tracing. Other error packages provide some of the features found in `eris` but without flexible control over error output formatting. This package provides default string and JSON formatters with options to control things like separators and stack trace output. However, it also provides an option to write custom formatters via [`eris.Unpack`](https://godoc.org/github.com/morningvera/eris#Unpack).
+Named after the Greek goddess of strife and discord, this package is intended to give you more control over error handling via error wrapping, stack tracing, and output formatting. Basic error wrapping was added in Go 1.13, but it omitted user-friendly `Wrap` methods and built-in stack tracing. Other error packages provide some of the features found in `eris` but without flexible control over error output formatting. This package provides default string and JSON formatters with options to control things like separators and stack trace output. However, it also provides an option to write custom formatters via [`eris.Unpack`](https://godoc.org/github.com/rotisserie/eris#Unpack).
 
 Error wrapping behaves somewhat differently than existing packages. It relies on root errors that contain a full stack trace and wrap errors that contain a single stack frame. When errors from other packages are wrapped, a root error is automatically created before wrapping it with the new context. This allows `eris` to work with other error packages transparently and elimates the need to manage stack traces manually. Unlike other packages, `eris` also works well with global error types by automatically updating stack traces during error wrapping.
 
@@ -78,7 +78,7 @@ The first layer of the full error output shows a message ("error getting resourc
 
 ## Formatted error printing
 
-The default format in `eris` is returned by the method [`NewDefaultFormat()`](https://godoc.org/github.com/morningvera/eris#NewDefaultFormat). Below you can see what a default formatted error in `eris` might look like.
+The default format in `eris` is returned by the method [`NewDefaultFormat()`](https://godoc.org/github.com/rotisserie/eris#NewDefaultFormat). Below you can see what a default formatted error in `eris` might look like.
 
 Errors printed without trace using `fmt.Printf("%v\n", err)`
 
@@ -100,13 +100,13 @@ root error
         runtime.goexit: ../go1.11.4/src/runtime/asm_amd64.s: 1333
 ```
 
-'eris' also provides developers a way to define a custom format to print the errors. The [`Format`](https://godoc.org/github.com/morningvera/eris#Format) object defines separators for various components of the error/trace and can be passed to utility methods for printing string and JSON formats.
+'eris' also provides developers a way to define a custom format to print the errors. The [`Format`](https://godoc.org/github.com/rotisserie/eris#Format) object defines separators for various components of the error/trace and can be passed to utility methods for printing string and JSON formats.
 
 ## Error object
 
-The [`UnpackedError`](https://godoc.org/github.com/morningvera/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrChain` and `ErrRoot` fields correspond to `wrapError` and `rootError` types, respectively. If any other error type is unpacked, it will appear in the ExternalErr field.
+The [`UnpackedError`](https://godoc.org/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrChain` and `ErrRoot` fields correspond to `wrapError` and `rootError` types, respectively. If any other error type is unpacked, it will appear in the ExternalErr field.
 
-The [`Unpack()`](https://godoc.org/github.com/morningvera/eris#Unpack) method returns the corresponding `UnpackedError` object for a given error. This object can also be converted to string and JSON for logging and printing error traces. This can be done by using the methods [`ToString()`](https://godoc.org/github.com/morningvera/eris#UnpackedError.ToString) and [`ToJSON()`](https://godoc.org/github.com/morningvera/eris#UnpackedError.ToJSON). Note the `ToJSON()` method returns a `map[string]interface{}` type which can be marshalled to JSON using the `encoding/json` package.
+The [`Unpack()`](https://godoc.org/github.com/rotisserie/eris#Unpack) method returns the corresponding `UnpackedError` object for a given error. This object can also be converted to string and JSON for logging and printing error traces. This can be done by using the methods [`ToString()`](https://godoc.org/github.com/rotisserie/eris#UnpackedError.ToString) and [`ToJSON()`](https://godoc.org/github.com/rotisserie/eris#UnpackedError.ToJSON). Note the `ToJSON()` method returns a `map[string]interface{}` type which can be marshalled to JSON using the `encoding/json` package.
 
 ## Logging errors with more control
 

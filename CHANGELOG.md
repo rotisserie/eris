@@ -1,4 +1,12 @@
 
+<a name="v0.1.1"></a>
+## [v0.1.1](https://github.com/rotisserie/eris/compare/v0.1.0...v0.1.1) (2019-12-26)
+
+### Bug Fixes
+
+* update mod file
+
+
 <a name="v0.1.0"></a>
 ## v0.1.0 (2019-12-25)
 
