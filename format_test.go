@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/morningvera/eris"
+	"github.com/rotisserie/eris"
 )
 
 func errChainsEqual(a []eris.ErrLink, b []eris.ErrLink) bool {

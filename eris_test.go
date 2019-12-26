@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/morningvera/eris"
+	"github.com/rotisserie/eris"
 )
 
 func setupTestCase(wrapf bool, cause error, input []string) error {
