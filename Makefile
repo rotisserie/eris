@@ -48,6 +48,12 @@ test:
 	@echo Running tests
 	@go test -race -v .
 
+## Run the tests with coverage
+test-coverage:
+	@echo Running tests with coverage
+	@go test -short -coverprofile cover.out -covermode=atomic ${PKG_LIST}
+	@cat cover.out >> coverage.txt
+
 ## Stage a release (usage: make release-tag VERSION={VERSION_TAG})
 release-tag: build fmt lint test
 	@echo Tagging release with version "${VERSION}"

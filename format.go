@@ -127,6 +127,7 @@ func unpackWrapErr(chain *[]ErrLink, err *wrapError) UnpackedError {
 	return e
 }
 
+// ErrRoot represents an error stack and the accompanying message.
 type ErrRoot struct {
 	Msg   string
 	Stack []StackFrame
@@ -161,6 +162,7 @@ func (err *ErrRoot) formatJSON(format Format) map[string]interface{} {
 	return rootMap
 }
 
+// ErrLink represents a single error frame and the accompanying message.
 type ErrLink struct {
 	Msg   string
 	Frame StackFrame
