@@ -1,16 +1,15 @@
-# eris ![minecraft golden apple](https://cdn.emojidex.com/emoji/hdpi/minecraft_golden_apple.png?1511637499 "minecraft golden apple")
+# eris ![Logo][eris-logo]
+[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![GoReport][report-img]][report] [![Discord][chat-img]][chat]
 
 Package eris provides a better way to handle, trace, and log errors in Go. This package is inspired by a few existing packages: [xerrors](https://github.com/golang/xerrors), [pkg/errors](https://github.com/pkg/errors), and [Go 1.13 errors](https://golang.org/pkg/errors/).
 
 `go get github.com/rotisserie/eris`
 
-Check out the [package docs](https://godoc.org/github.com/rotisserie/eris) for more detailed information or connect with us on our [Slack channel](https://gorotisserie.slack.com/archives/CS13EC3T6) if you want to discuss anything in depth.
-
 ## How is eris different?
 
 Named after the Greek goddess of strife and discord, this package is intended to give you more control over error handling via error wrapping, stack tracing, and output formatting. Basic error wrapping was added in Go 1.13, but it omitted user-friendly `Wrap` methods and built-in stack tracing. Other error packages provide some of the features found in `eris` but without flexible control over error output formatting. This package provides default string and JSON formatters with options to control things like separators and stack trace output. However, it also provides an option to write custom formatters via [`eris.Unpack`](https://godoc.org/github.com/rotisserie/eris#Unpack).
 
-Error wrapping behaves somewhat differently than existing packages. It relies on root errors that contain a full stack trace and wrap errors that contain a single stack frame. When errors from other packages are wrapped, a root error is automatically created before wrapping it with the new context. This allows `eris` to work with other error packages transparently and elimates the need to manage stack traces manually. Unlike other packages, `eris` also works well with global error types by automatically updating stack traces during error wrapping.
+Error wrapping behaves somewhat differently than existing packages. It relies on root errors that contain a full stack trace and wrap errors that contain a single stack frame. When errors from other packages are wrapped, a root error is automatically created before wrapping it with the new context. This allows `eris` to work with other error packages transparently and eliminates the need to manage stack traces manually. Unlike other packages, `eris` also works well with global error types by automatically updating stack traces during error wrapping.
 
 ## Types of errors
 
@@ -150,4 +149,22 @@ Migrating to `eris` should be a very simple process. If it doesn't offer somethi
 
 ## Contributing
 
-If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal. We're also available to discuss potential issues and features on our [Slack channel](https://gorotisserie.slack.com/archives/CS13EC3T6).
+If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal. We're also available to discuss potential issues and features on our [Discord channel](https://discordapp.com/channels/659952923073183749/659952923073183756).
+
+-------------------------------------------------------------------------------
+
+Released under the [MIT License].
+
+[MIT License]: LICENSE.txt
+[eris-logo]: https://cdn.emojidex.com/emoji/hdpi/minecraft_golden_apple.png?1511637499
+[doc-img]: https://img.shields.io/badge/godoc-eris-blue
+[doc]: https://godoc.org/github.com/rotisserie/eris
+[ci-img]: https://github.com/rotisserie/eris/workflows/build%20and%20test/badge.svg
+[ci]: https://github.com/rotisserie/eris/actions
+[cov-img]: https://codecov.io/gh/rotisserie/eris/branch/master/graph/badge.svg
+[cov]: https://codecov.io/gh/rotisserie/eris
+[report-img]: https://goreportcard.com/badge/github.com/rotisserie/eris
+[report]: https://goreportcard.com/report/github.com/rotisserie/eris
+[chat-img]: https://img.shields.io/discord/659952923073183749
+[chat]: https://discordapp.com/channels/659952923073183749/659952923073183756
+
