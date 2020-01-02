@@ -1,5 +1,5 @@
 # eris ![Logo][eris-logo]
-[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![GoReport][report-img]][report] [![Discord][chat-img]][chat][![Mentioned in Awesome Go][awesome-img]][awesome]
+[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![GoReport][report-img]][report] [![Discord][chat-img]][chat] [![Mentioned in Awesome Go][awesome-img]][awesome]
 
 Package eris provides a better way to handle, trace, and log errors in Go. This package is inspired by a few existing packages: [xerrors](https://github.com/golang/xerrors), [pkg/errors](https://github.com/pkg/errors), and [Go 1.13 errors](https://golang.org/pkg/errors/).
 
