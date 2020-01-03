@@ -52,7 +52,11 @@ test:
 test-coverage:
 	@echo Running tests with coverage
 	@go test -short -coverprofile cover.out -covermode=atomic ${PKG_LIST}
-	@cat cover.out >> coverage.txt
+
+## Display test coverage
+display-coverage:
+	@echo Displaying test coverage
+	@go tool cover -html=cover.out
 
 ## Stage a release (usage: make release-tag VERSION={VERSION_TAG})
 release-tag: build fmt lint test
