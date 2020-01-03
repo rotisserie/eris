@@ -39,7 +39,17 @@ The `eris` package provides a few ways to inspect and compare error types. [`eri
 NotFound := eris.New("not found")
 _, err := db.Get(id)
 // check if the resource was not found
-if eris.Is(err, NotFound) || eris.Cause(err) == NotFound {
+if eris.Is(err, NotFound) {
+  // return the error with some useful context
+  return eris.Wrapf(err, "error getting resource '%v'", id)
+}
+```
+
+```golang
+NotFound := eris.New("not found")
+_, err := db.Get(id)
+// compare the cause to some sentinel value
+if eris.Cause(err) == NotFound {
   // return the error with some useful context
   return eris.Wrapf(err, "error getting resource '%v'", id)
 }
