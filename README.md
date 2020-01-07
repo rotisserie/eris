@@ -119,7 +119,7 @@ The [`Unpack()`](https://godoc.org/github.com/rotisserie/eris#Unpack) method ret
 
 ## Logging errors with more control
 
-While `eris` supports logging errors with Go's `fmt` package, it's often advantageous to use the provided string and JSON formatters instead. These methods provide much more control over the error output and should work seamlessly with whatever logging package you choose. The example below shows how to integrate `eris` with (logrus)[https://github.com/sirupsen/logrus].
+While `eris` supports logging errors with Go's `fmt` package, it's often advantageous to use the provided string and JSON formatters instead. These methods provide much more control over the error output and should work seamlessly with whatever logging package you choose. The example below shows how to integrate `eris` with [logrus](https://github.com/sirupsen/logrus).
 
 ```golang
 var fields log.Fields
