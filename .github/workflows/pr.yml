@@ -1,5 +1,5 @@
-name: eris
-on: [push]
+name: pull request
+on: [pull_request]
 jobs:
   lint:
     name: Lint
@@ -13,7 +13,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
 
-      - name: Lint Go Code
+      - name: Lint Go code
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
           go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -56,11 +56,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
 
-      - name: Test Go Code
-        run: make test-coverage
+      - name: Test Go code
+        run: make test
 
-      - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v1.0.0
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
-          file: ./cover.out
+      - name: Check test coverage
+        run: make test-coverage
