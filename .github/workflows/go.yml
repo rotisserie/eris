@@ -1,9 +1,26 @@
-name: build and test
-on: [push, pull_request]
+name: eris
+on: [push]
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Lint Go Code
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
+          go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+          make lint
 
   build:
-    name: Build / Test
+    name: Build
     runs-on: ubuntu-latest
     steps:
 
@@ -13,7 +30,7 @@ jobs:
         go-version: 1.13
       id: go
 
-    - name: Check out code into the Go module directory
+    - name: Check out code
       uses: actions/checkout@v1
 
     - name: Get dependencies
@@ -27,11 +44,23 @@ jobs:
     - name: Build
       run: make build
 
-    - name: Test
-      run: make test-coverage
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
 
-    - name: Upload Coverage report to CodeCov
-      uses: codecov/codecov-action@v1.0.0
-      with:
-        token: ${{secrets.CODECOV_TOKEN}}
-        file: ./cover.out
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Test Go Code
+        run: make test-coverage
+
+      - name: Upload Coverage report to CodeCov
+        uses: codecov/codecov-action@v1.0.0
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+          file: ./cover.out

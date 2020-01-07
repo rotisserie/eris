@@ -42,14 +42,14 @@ type UnpackedError struct {
 // Unpack returns UnpackedError type for a given golang error type.
 func Unpack(err error) UnpackedError {
 	e := UnpackedError{}
-	switch err.(type) {
+	switch err := err.(type) {
 	case nil:
 		return UnpackedError{}
 	case *rootError:
-		e = unpackRootErr(err.(*rootError))
+		e = unpackRootErr(err)
 	case *wrapError:
 		chain := []ErrLink{}
-		e = unpackWrapErr(&chain, err.(*wrapError))
+		e = unpackWrapErr(&chain, err)
 	default:
 		e.ExternalErr = err.Error()
 	}
@@ -113,14 +113,14 @@ func unpackWrapErr(chain *[]ErrLink, err *wrapError) UnpackedError {
 	e.ErrChain = chain
 
 	nextErr := err.Unwrap()
-	switch nextErr.(type) {
+	switch nextErr := nextErr.(type) {
 	case nil:
 		return e
 	case *rootError:
-		uErr := unpackRootErr(nextErr.(*rootError))
+		uErr := unpackRootErr(nextErr)
 		e.ErrRoot = uErr.ErrRoot
 	case *wrapError:
-		e = unpackWrapErr(chain, nextErr.(*wrapError))
+		e = unpackWrapErr(chain, nextErr)
 	default:
 		e.ExternalErr = err.Error()
 	}
