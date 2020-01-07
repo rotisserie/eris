@@ -40,8 +40,7 @@ fmt:
 ## Lint with golangci-lint
 lint:
 	@echo Linting
-	@go get github.com/golangci/golangci-lint
-	@golangci-lint run ./... --deadline 5m
+	@golangci-lint run --no-config --issues-exit-code=0 --timeout=5m
 
 ## Run the tests
 test:
