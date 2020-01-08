@@ -9,6 +9,15 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+// Hack to run examples that don't have a predictable output (i.e. all
+// examples that involve printing stack traces).
+func TestExample_logger(t *testing.T) {
+	if !testing.Verbose() {
+		return
+	}
+	Example_logger()
+}
+
 // Demonstrates JSON formatting of wrapped errors that originate from
 // external (non-eris) error types.
 func ExampleToJSON_external() {
@@ -21,8 +30,18 @@ func ExampleToJSON_external() {
 	err := readFile("example.json")
 	u, _ := json.Marshal(eris.ToJSON(err, false)) // false: omit stack trace
 	fmt.Println(string(u))
-	// Output:
-	// {"external":"unexpected EOF"}
+
+	// example output:
+	// {
+	//   "external":"unexpected EOF"
+	// }
+}
+
+func TestExampleToJSON_external(t *testing.T) {
+	if !testing.Verbose() {
+		return
+	}
+	ExampleToJSON_external()
 }
 
 // Demonstrates JSON formatting of wrapped errors that originate from
@@ -53,25 +72,23 @@ func ExampleToJSON_global() {
 
 	// example output:
 	// {
-	// 	"root": {
-	// 		"message": "unexpected EOF",
-	// 		"stack": [
-	// 			"main.readFile:.../example/main.go:6",
-	// 			"main.parseFile:.../example/main.go:12",
-	// 			"main.main:.../example/main.go:20",
-	// 		]
-	// 	},
-	// 	"wrap": [
-	// 		{
-	// 			"message": "error reading file 'example.json'",
-	// 			"stack": "main.readFile:.../example/main.go:6"
-	// 		}
-	// 	]
+	//   "root": {
+	//     "message": "unexpected EOF",
+	//     "stack": [
+	//       "main.readFile:.../example/main.go:6",
+	//       "main.parseFile:.../example/main.go:12",
+	//       "main.main:.../example/main.go:20",
+	//     ]
+	//   },
+	//   "wrap": [
+	//     {
+	//       "message": "error reading file 'example.json'",
+	//       "stack": "main.readFile:.../example/main.go:6"
+	//     }
+	//   ]
 	// }
 }
 
-// Hack to run examples that don't have a predictable output (i.e. all
-// examples that involve printing stack traces).
 func TestExampleToJSON_global(t *testing.T) {
 	if !testing.Verbose() {
 		return
@@ -123,29 +140,29 @@ func ExampleToJSON_local() {
 	fmt.Printf("%v\n", string(u))
 
 	// example output:
-	// 	{
-	// 	"root": {
-	// 		"message": "unexpected EOF",
-	// 		"stack": [
-	// 			"main.readFile:.../example/main.go:3",
-	// 			"main.parseFile:.../example/main.go:9",
-	// 			"main.parseFile:.../example/main.go:11",
-	// 			"main.processFile:.../example/main.go:19",
-	// 			"main.printFile:.../example/main.go:29",
-	// 			"main.printFile:.../example/main.go:31",
-	// 			"main.main:.../example/main.go:37",
-	// 		]
-	// 	},
-	// 	"wrap": [
-	// 		{
-	// 			"message": "error reading file 'example.json'",
-	// 			"stack": "main.parseFile: .../example/main.go: 11"
-	// 		},
-	// 		{
-	// 			"message": "error printing file 'example.json'",
-	// 			"stack": "main.printFile:.../example/main.go:31"
-	// 		}
-	// 	]
+	// {
+	//   "root": {
+	//     "message": "unexpected EOF",
+	//     "stack": [
+	//       "main.readFile:.../example/main.go:3",
+	//       "main.parseFile:.../example/main.go:9",
+	//       "main.parseFile:.../example/main.go:11",
+	//       "main.processFile:.../example/main.go:19",
+	//       "main.printFile:.../example/main.go:29",
+	//       "main.printFile:.../example/main.go:31",
+	//       "main.main:.../example/main.go:37",
+	//     ]
+	//   },
+	//   "wrap": [
+	//     {
+	//       "message": "error reading file 'example.json'",
+	//       "stack": "main.parseFile: .../example/main.go: 11"
+	//     },
+	//     {
+	//       "message": "error printing file 'example.json'",
+	//       "stack": "main.printFile:.../example/main.go:31"
+	//     }
+	//   ]
 	// }
 }
 
@@ -167,7 +184,16 @@ func ExampleToString_external() {
 	// unpack and print the error
 	err := readFile("example.json")
 	fmt.Println(eris.ToString(err, false)) // false: omit stack trace
+
+	// example output:
 	// unexpected EOF
+}
+
+func TestExampleToString_external(t *testing.T) {
+	if !testing.Verbose() {
+		return
+	}
+	ExampleToString_external()
 }
 
 // Demonstrates string formatting of wrapped errors that originate from
@@ -205,11 +231,11 @@ func ExampleToString_global() {
 
 	// example output:
 	// unexpected EOF
-	// 	main.readFile:.../example/main.go:6
-	// 	main.parseFile:.../example/main.go:12
-	// 	main.main:.../example/main.go:20
+	//   main.readFile:.../example/main.go:6
+	//   main.parseFile:.../example/main.go:12
+	//   main.main:.../example/main.go:20
 	// error reading file 'example.json'
-	// 	main.readFile:.../example/main.go:6
+	//   main.readFile:.../example/main.go:6
 }
 
 func TestExampleToString_global(t *testing.T) {
@@ -251,12 +277,12 @@ func ExampleToString_local() {
 
 	// example output:
 	// unexpected EOF
-	// 	main.readFile:.../example/main.go:3
-	// 	main.parseFile:.../example/main.go:9
-	// 	main.parseFile:.../example/main.go:11
-	// 	main.main:.../example/main.go:17
+	//   main.readFile:.../example/main.go:3
+	//   main.parseFile:.../example/main.go:9
+	//   main.parseFile:.../example/main.go:11
+	//   main.main:.../example/main.go:17
 	// error reading file 'example.json'
-	// 	main.parseFile:.../example/main.go:11
+	//   main.parseFile:.../example/main.go:11
 }
 
 func TestExampleToString_local(t *testing.T) {

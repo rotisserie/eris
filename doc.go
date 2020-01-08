@@ -1,132 +1,110 @@
 // Package eris provides a better way to handle, trace, and log errors in Go.
 //
-// Types of errors
+// Named after the Greek goddess of strife and discord, this package is designed to give you more
+// control over error handling via error wrapping, stack tracing, and output formatting. eris was
+// inspired by a simple question: what if you could fix a bug without wasting time replicating the
+// issue or digging through the code?
 //
-// This package is concerned with only three different types of errors: root
-// errors, wrap errors, and external errors. Root and wrap errors are defined
-// types in this package and all other error types are external or third-party
-// errors.
+// Many of the methods in this package will look familiar if you've used pkg/errors or xerrors, but
+// eris employs some additional tricks during error wrapping and unwrapping that greatly improve the
+// readability of the stack which should make debugging easier. This package also takes a unique
+// approach to formatting errors that allows you to write custom formats that conform to your error
+// or log aggregator of choice.
 //
-// Root errors are created via eris.New and eris.Errorf. Generally, it's a
-// good idea to maintain a set of root errors that are then wrapped with
-// additional context whenever an error of that type occurs. Wrap errors
-// represent a stack of errors that have been wrapped with additional context.
-// Unwrapping these errors via eris.Unwrap will return the next error in the
-// stack until a root error is reached. eris.Cause will also retrieve the root
-// error.
+// Creating errors
 //
-// When external error types are wrapped with additional context, a root error
-// is first created from the original error. This creates a stack trace for the
-// error and allows it to function with the rest of the `eris` package.
+// Creating errors is simple via eris.New and eris.NewGlobal.
 //
-// Wrapping errors with additional context
+//   var (
+//     // global error values can be useful when wrapping errors or inspecting error types
+//     ErrInternalServer = eris.NewGlobal("error internal server")
+//   )
 //
-// eris.Wrap adds context to an error while preserving the type of the
-// original error. This method behaves differently for each error type. For
-// root errors, the stack trace is reset to the current callers which ensures
-// traces are correct when using global/sentinel error values. Wrapped error
-// types are simply wrapped with the new context. For external types (i.e.
-// something other than root or wrap errors), a new root error is created for
-// the original error and then it's wrapped with the additional context.
+//   func (req *Request) Validate() error {
+//     if req.ID == "" {
+//       // or return a new error at the source if you prefer
+//       return eris.New("error bad request")
+//     }
+//     return nil
+//   }
 //
-//    _, err := db.Get(id)
-//    if err != nil {
-//      // return the error with some useful context
-//      return eris.Wrapf(err, "error getting resource '%v'", id)
-//    }
+// Wrapping errors
 //
-// Inspecting error types
+// eris.Wrap adds context to an error while preserving the original error.
 //
-// The eris package provides a few ways to inspect and compare error types.
-// eris.Is returns true if a particular error appears anywhere in the error
-// chain, and eris.Cause returns the root cause of the error. Currently,
-// eris.Is works simply by comparing error messages with each other. If an
-// error contains a particular error message anywhere in its chain (e.g. "not
-// found"), it's defined to be that error type (i.e. eris.Is will return
-// true).
+//   relPath, err := GetRelPath("/Users/roti/", resource.AbsPath)
+//   if err != nil {
+//     // wrap the error if you want to add more context
+//     return nil, eris.Wrapf(err, "failed to get relative path for resource '%v'", resource.ID)
+//   }
 //
-//    NotFound := eris.New("not found")
-//    _, err := db.Get(id)
-//    // check if the resource was not found
-//    if eris.Is(err, NotFound) {
-//      // return the error with some useful context
-//      return eris.Wrapf(err, "error getting resource '%v'", id)
-//    }
+// Formatting and logging errors
 //
-//    NotFound := eris.New("not found")
-//    _, err := db.Get(id)
-//    // compare the cause to some sentinel value
-//    if eris.Cause(err) == NotFound {
-//      // return the error with some useful context
-//      return eris.Wrapf(err, "error getting resource '%v'", id)
-//    }
+// eris.ToString and eris.ToJSON should be used to log errors with the default format. The JSON
+// method returns a map[string]interface{} type for compatibility with Go's encoding/json package
+// and many common JSON loggers (e.g. logrus).
 //
-// Stack traces
+//   // format the error to JSON with the default format and stack traces enabled
+//   formattedJSON := eris.ToJSON(err, true)
+//   fmt.Println(json.Marshal(formattedJSON)) // marshal to JSON and print
+//   logger.WithField("error", formattedJSON).Error() // or ideally, pass it directly to a logger
 //
-// Errors created with this package contain stack traces that are managed
-// automatically even when wrapping global errors or errors from other
-// libraries. Stack traces are currently mandatory when creating and wrapping
-// errors but optional when printing or logging errors. Printing an error with
-// or without the stack trace is simple:
+//   // format the error to a string and print it
+//   formattedStr := eris.ToString(err, true)
+//   fmt.Println(formattedStr)
 //
-//    _, err := db.Get(id)
-//    if err != nil {
-//      return eris.Wrapf(err, "error getting resource '%v'", id)
-//    }
-//    fmt.Printf("%v", err) // print without the stack trace
-//    fmt.Printf("%+v", err) // print with the stack trace
+// eris also enables control over the default format's separators and allows advanced users to write
+// their own custom formats.
 //
-// For an error that has been wrapped once, the output will look something
-// like this:
+// Interpreting eris stack traces
 //
-//    # output without the stack trace
-//    error getting resource 'example-id': not found
+// Errors created with this package contain stack traces that are managed automatically. They're
+// currently mandatory when creating and wrapping errors but optional when printing or logging. The
+// stack trace and all wrapped layers follow the same order as Go's `runtime` package, which means
+// that the root cause of the error is shown first.
 //
-//    # output with the stack trace
-//    error getting resource 'example-id'
-//      api.GetResource: /path/to/file/api.go: 30
-//    not found
-//      api.GetResource: /path/to/file/api.go: 30
-//      db.Get: /path/to/file/db.go: 99
-//      runtime.goexit: /path/to/go/src/libexec/src/runtime/asm_amd64.s: 1337
+//   {
+//     "root":{
+//       "message":"error bad request", // root cause
+//       "stack":[
+//         "eris_test.(*Request).Validate:.../example_logger_test.go:25", // location of the root
+//         "eris_test.(*Request).Validate:.../example_logger_test.go:26", // location of Wrap call
+//         "eris_test.ProcessResource:.../example_logger_test.go:68",
+//         "eris_test.Example_logger:.../example_logger_test.go:140",
+//       ]
+//     },
+//     "wrap":[
+//       {
+//         "message":"received a request with no ID", // additional context
+//         "stack":"eris_test.(*Request).Validate:.../example_logger_test.go:26" // location of Wrap call
+//       }
+//     ]
+//   }
 //
-// The first layer of the full error output shows a message ("error getting
-// resource 'example-id'") and a single stack frame. The next layer shows the
-// root error ("not found") and the full stack trace.
+// Inspecting errors
 //
-// Logging errors with more control
+// The eris package provides a couple ways to inspect and compare error types. eris.Is returns true
+// if a particular error appears anywhere in the error chain. Currently, it works simply by
+// comparing error messages with each other. If an error contains a particular message (e.g. "error
+// not found") anywhere in its chain, it's defined to be that error type.
 //
-// While eris supports logging errors with Go's fmt package, it's often
-// advantageous to use the provided string and JSON formatters instead. These
-// methods provide much more control over the error output and should work
-// seamlessly with whatever logging package you choose.
+//   ErrNotFound := eris.NewGlobal("error not found")
+//   _, err := db.Get(id)
+//   // check if the resource was not found
+//   if eris.Is(err, ErrNotFound) {
+//     // return the error with some useful context
+//     return eris.Wrapf(err, "error getting resource '%v'", id)
+//   }
 //
-//    var fields log.Fields
-//    unpackedErr := eris.Unpack(err)
-//    fields["method"] = "api.GetResource"
-//    fields["error"] = unpackedErr.ToJSON(eris.NewDefaultFormat(true))
-//    logger.WithFields(fields).Errorf("method completed with error (%v)", err)
+// eris.Cause unwraps an error until it reaches the cause, which is defined as the first (i.e. root)
+// error in the chain.
 //
-// When using a JSON logger, the output should look something like this:
-//
-//    {
-//      "method":"api.GetResource",
-//      "error":{
-//        "error chain":[
-//          {
-//            "message":"error getting resource 'example-id'",
-//            "stack":"api.GetResource: /path/to/file/api.go: 30"
-//          }
-//        ],
-//        "error root":{
-//          "message":"not found",
-//          "stack":[
-//            "api.GetResource: /path/to/file/api.go: 30",
-//            "db.Get: /path/to/file/db.go: 99",
-//            "runtime.goexit: /path/to/go/src/runtime/asm_amd64.s: 1337"
-//          ]
-//        }
-//      }
-//    }
+//   ErrNotFound := eris.NewGlobal("error not found")
+//   _, err := db.Get(id)
+//   // compare the cause to some sentinel value
+//   if eris.Cause(err) == ErrNotFound {
+//     // return the error with some useful context
+//     return eris.Wrapf(err, "error getting resource '%v'", id)
+//   }
 //
 package eris
