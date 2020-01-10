@@ -55,7 +55,7 @@ func ExampleUnpackedError_ToJSON_global() {
 	u, _ := json.MarshalIndent(uerr.ToJSON(format), "", "\t")
 	fmt.Printf("%v\n", string(u))
 
-	// example output:
+	// Output:
 	// {
 	// 	"root": {
 	// 		"message": "unexpected EOF",
@@ -128,7 +128,7 @@ func ExampleUnpackedError_ToJSON_local() {
 	u, _ := json.MarshalIndent(uerr.ToJSON(format), "", "\t")
 	fmt.Printf("%v\n", string(u))
 
-	// example output:
+	// Output:
 	// 	{
 	// 	"root": {
 	// 		"message": "unexpected EOF",
@@ -206,7 +206,7 @@ func ExampleUnpackedError_ToString_global() {
 	// print the error via fmt.Printf
 	fmt.Printf("%v\n", err) // %v: omit stack trace
 
-	// example output:
+	// Output:
 	// unexpected EOF: error reading file 'example.json'
 
 	// unpack and print the error via uerr.ToString(...)
@@ -214,7 +214,7 @@ func ExampleUnpackedError_ToString_global() {
 	format := eris.NewDefaultFormat(true) // true: include stack trace
 	fmt.Printf("%v\n", uerr.ToString(format))
 
-	// example output:
+	// Output:
 	// unexpected EOF
 	// 	main.readFile: .../example/main.go: 6
 	// 	main.parseFile: .../example/main.go: 12
@@ -254,7 +254,7 @@ func ExampleUnpackedError_ToString_local() {
 	// print the error via fmt.Printf
 	fmt.Printf("%v\n", err) // %v: omit stack trace
 
-	// example output:
+	// Output:
 	// unexpected EOF: error reading file 'example.json'
 
 	// unpack and print the error via uerr.ToString(...)
@@ -262,7 +262,7 @@ func ExampleUnpackedError_ToString_local() {
 	format := eris.NewDefaultFormat(true) // true: include stack trace
 	fmt.Println(uerr.ToString(format))
 
-	// example output:
+	// Output:
 	// unexpected EOF
 	// 	main.readFile: .../example/main.go: 3
 	// 	main.parseFile: .../example/main.go: 9
