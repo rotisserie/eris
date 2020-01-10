@@ -10,7 +10,16 @@ import (
 func New(msg string) error {
 	return &rootError{
 		msg:   msg,
-		stack: callers(3),
+		stack: callers(3), // callers(3) skips this method, stack.callers, and runtime.Callers
+	}
+}
+
+// NewGlobal creates a new root error for use as a global sentinel type.
+func NewGlobal(msg string) error {
+	return &rootError{
+		global: true,
+		msg:    msg,
+		stack:  callers(3),
 	}
 }
 
@@ -44,21 +53,25 @@ func wrap(err error, msg string) error {
 		return nil
 	}
 
+	// callers(4) skips this method, Wrap(f), stack.callers, and runtime.Callers
+	stack := callers(4)
 	switch e := err.(type) {
 	case *rootError:
-		e.stack = callers(4)
+		if e.global {
+			e.stack = stack
+		}
 	case *wrapError:
 	default:
 		err = &rootError{
 			msg:   e.Error(),
-			stack: callers(4),
+			stack: stack,
 		}
 	}
 
 	return &wrapError{
 		msg:   msg,
 		err:   err,
-		frame: caller(3),
+		stack: stack,
 	}
 }
 
@@ -112,8 +125,9 @@ func Cause(err error) error {
 }
 
 type rootError struct {
-	msg   string
-	stack *stack
+	global bool
+	msg    string
+	stack  *stack
 }
 
 func (e *rootError) Error() string {
@@ -134,7 +148,7 @@ func (e *rootError) Is(target error) bool {
 type wrapError struct {
 	msg   string
 	err   error
-	frame *frame
+	stack *stack
 }
 
 func (e *wrapError) Error() string {

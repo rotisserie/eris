@@ -21,6 +21,8 @@ func setupTestCase(wrapf bool, cause error, input []string) error {
 }
 
 func TestErrorWrapping(t *testing.T) {
+	globalErr := eris.NewGlobal("global error")
+
 	tests := map[string]struct {
 		cause  error    // root error
 		input  []string // input for error wrapping
@@ -30,15 +32,20 @@ func TestErrorWrapping(t *testing.T) {
 			cause: nil,
 			input: []string{"additional context"},
 		},
+		"standard error wrapping with global root cause (eris.NewGlobal)": {
+			cause:  globalErr,
+			input:  []string{"additional context", "even more context"},
+			output: "global error: additional context: even more context",
+		},
 		"standard error wrapping with internal root cause (eris.New)": {
 			cause:  eris.New("root error"),
 			input:  []string{"additional context", "even more context"},
-			output: "even more context: additional context: root error",
+			output: "root error: additional context: even more context",
 		},
 		"standard error wrapping with external root cause (errors.New)": {
 			cause:  errors.New("external error"),
 			input:  []string{"additional context", "even more context"},
-			output: "even more context: additional context: external error",
+			output: "external error: additional context: even more context",
 		},
 		"no error wrapping with internal root cause (eris.Errorf)": {
 			cause:  eris.Errorf("%v", "root error"),
@@ -51,12 +58,14 @@ func TestErrorWrapping(t *testing.T) {
 	}
 
 	for desc, tc := range tests {
-		err := setupTestCase(false, tc.cause, tc.input)
-		if err != nil && tc.cause == nil {
-			t.Errorf("%v: wrapping nil errors should return nil but got { %v }", desc, err)
-		} else if err != nil && tc.output != err.Error() {
-			t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, err)
-		}
+		t.Run(desc, func(t *testing.T) {
+			err := setupTestCase(false, tc.cause, tc.input)
+			if err != nil && tc.cause == nil {
+				t.Errorf("%v: wrapping nil errors should return nil but got { %v }", desc, err)
+			} else if err != nil && tc.output != err.Error() {
+				t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, err)
+			}
+		})
 	}
 }
 
@@ -70,8 +79,8 @@ func TestErrorUnwrap(t *testing.T) {
 			cause: eris.New("root error"),
 			input: []string{"additional context", "even more context"},
 			output: []string{
-				"even more context: additional context: root error",
-				"additional context: root error",
+				"root error: additional context: even more context",
+				"root error: additional context",
 				"root error",
 			},
 		},
@@ -79,28 +88,30 @@ func TestErrorUnwrap(t *testing.T) {
 			cause: errors.New("external error"),
 			input: []string{"additional context", "even more context"},
 			output: []string{
-				"even more context: additional context: external error",
-				"additional context: external error",
+				"external error: additional context: even more context",
+				"external error: additional context",
 				"external error",
 			},
 		},
 	}
 
 	for desc, tc := range tests {
-		err := setupTestCase(true, tc.cause, tc.input)
-		for _, out := range tc.output {
-			if err == nil {
-				t.Errorf("%v: unwrapping error returned nil but expected { %v }", desc, out)
-			} else if out != err.Error() {
-				t.Errorf("%v: expected { %v } got { %v }", desc, out, err)
+		t.Run(desc, func(t *testing.T) {
+			err := setupTestCase(true, tc.cause, tc.input)
+			for _, out := range tc.output {
+				if err == nil {
+					t.Errorf("%v: unwrapping error returned nil but expected { %v }", desc, out)
+				} else if out != err.Error() {
+					t.Errorf("%v: expected { %v } got { %v }", desc, out, err)
+				}
+				err = eris.Unwrap(err)
 			}
-			err = eris.Unwrap(err)
-		}
+		})
 	}
 }
 
 func TestErrorIs(t *testing.T) {
-	globalErr := eris.New("global error")
+	globalErr := eris.NewGlobal("global error")
 
 	tests := map[string]struct {
 		cause   error    // root error
@@ -167,12 +178,14 @@ func TestErrorIs(t *testing.T) {
 	}
 
 	for desc, tc := range tests {
-		err := setupTestCase(false, tc.cause, tc.input)
-		if tc.output && !eris.Is(err, tc.compare) {
-			t.Errorf("%v: expected eris.Is('%v', '%v') to return true but got false", desc, err, tc.compare)
-		} else if !tc.output && eris.Is(err, tc.compare) {
-			t.Errorf("%v: expected eris.Is('%v', '%v') to return false but got true", desc, err, tc.compare)
-		}
+		t.Run(desc, func(t *testing.T) {
+			err := setupTestCase(false, tc.cause, tc.input)
+			if tc.output && !eris.Is(err, tc.compare) {
+				t.Errorf("%v: expected eris.Is('%v', '%v') to return true but got false", desc, err, tc.compare)
+			} else if !tc.output && eris.Is(err, tc.compare) {
+				t.Errorf("%v: expected eris.Is('%v', '%v') to return false but got true", desc, err, tc.compare)
+			}
+		})
 	}
 }
 
@@ -196,11 +209,13 @@ func TestErrorCause(t *testing.T) {
 	}
 
 	for desc, tc := range tests {
-		err := setupTestCase(false, tc.cause, tc.input)
-		cause := eris.Cause(err)
-		if tc.output != eris.Cause(err) {
-			t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, cause)
-		}
+		t.Run(desc, func(t *testing.T) {
+			err := setupTestCase(false, tc.cause, tc.input)
+			cause := eris.Cause(err)
+			if tc.output != eris.Cause(err) {
+				t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, cause)
+			}
+		})
 	}
 }
 
@@ -213,26 +228,28 @@ func TestErrorFormatting(t *testing.T) {
 		"standard error wrapping with internal root cause (eris.New)": {
 			cause:  eris.New("root error"),
 			input:  []string{"additional context", "even more context"},
-			output: "even more context: additional context: root error",
+			output: "root error: additional context: even more context",
 		},
 		"standard error wrapping with external root cause (errors.New)": {
 			cause:  errors.New("external error"),
 			input:  []string{"additional context", "even more context"},
-			output: "even more context: additional context: external error",
+			output: "external error: additional context: even more context",
 		},
 	}
 
 	for desc, tc := range tests {
-		err := setupTestCase(false, tc.cause, tc.input)
-		if err != nil && tc.cause == nil {
-			t.Errorf("%v: wrapping nil errors should return nil but got { %v }", desc, err)
-		} else if err != nil && tc.output != err.Error() {
-			t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, err)
-		}
+		t.Run(desc, func(t *testing.T) {
+			err := setupTestCase(false, tc.cause, tc.input)
+			if err != nil && tc.cause == nil {
+				t.Errorf("%v: wrapping nil errors should return nil but got { %v }", desc, err)
+			} else if err != nil && tc.output != err.Error() {
+				t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, err)
+			}
 
-		// todo: automate stack trace verification
-		_ = fmt.Sprintf("error formatting results (%v):\n", desc)
-		_ = fmt.Sprintf("%v\n", err)
-		_ = fmt.Sprintf("%+v", err)
+			// todo: automate stack trace verification
+			_ = fmt.Sprintf("error formatting results (%v):\n", desc)
+			_ = fmt.Sprintf("%v\n", err)
+			_ = fmt.Sprintf("%+v", err)
+		})
 	}
 }
