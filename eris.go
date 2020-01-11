@@ -183,8 +183,6 @@ func printError(err error, s fmt.State, verb rune) {
 			withTrace = true
 		}
 	}
-	format := NewDefaultFormat(withTrace)
-	uErr := Unpack(err)
-	str := uErr.ToString(format)
+	str := ToString(err, withTrace)
 	_, _ = io.WriteString(s, str)
 }
