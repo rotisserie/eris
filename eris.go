@@ -58,7 +58,12 @@ func wrap(err error, msg string) error {
 	switch e := err.(type) {
 	case *rootError:
 		if e.global {
-			e.stack = stack
+			// create a new root error for global values to make sure nothing interferes with the stack
+			err = &rootError{
+				global: e.global,
+				msg:    e.msg,
+				stack:  stack,
+			}
 		}
 	case *wrapError:
 	default:
