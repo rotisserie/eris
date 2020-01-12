@@ -11,7 +11,7 @@ import (
 
 // Demonstrates JSON formatting of wrapped errors that originate from
 // external (non-eris) error types.
-func ExampleUnpackedError_ToJSON_external() {
+func ExampleToJSON_external() {
 	// example func that returns an IO error
 	readFile := func(fname string) error {
 		return io.ErrUnexpectedEOF
@@ -19,9 +19,7 @@ func ExampleUnpackedError_ToJSON_external() {
 
 	// unpack and print the error
 	err := readFile("example.json")
-	uerr := eris.Unpack(err)
-	format := eris.NewDefaultFormat(false) // false: omit stack trace
-	u, _ := json.Marshal(uerr.ToJSON(format))
+	u, _ := json.Marshal(eris.ToJSON(err, false)) // false: omit stack trace
 	fmt.Println(string(u))
 	// Output:
 	// {"external":"unexpected EOF"}
@@ -29,7 +27,7 @@ func ExampleUnpackedError_ToJSON_external() {
 
 // Demonstrates JSON formatting of wrapped errors that originate from
 // global root errors (created via eris.NewGlobal).
-func ExampleUnpackedError_ToJSON_global() {
+func ExampleToJSON_global() {
 	// declare a "global" error type
 	ErrUnexpectedEOF := eris.NewGlobal("unexpected EOF")
 
@@ -49,10 +47,8 @@ func ExampleUnpackedError_ToJSON_global() {
 	}
 
 	// unpack and print the error via uerr.ToJSON(...)
-	err := parseFile("example.json") // line 20
-	uerr := eris.Unpack(err)
-	format := eris.NewDefaultFormat(true) // true: include stack trace
-	u, _ := json.MarshalIndent(uerr.ToJSON(format), "", "\t")
+	err := parseFile("example.json")                             // line 20
+	u, _ := json.MarshalIndent(eris.ToJSON(err, true), "", "\t") // true: include stack trace
 	fmt.Printf("%v\n", string(u))
 
 	// example output:
@@ -60,15 +56,15 @@ func ExampleUnpackedError_ToJSON_global() {
 	// 	"root": {
 	// 		"message": "unexpected EOF",
 	// 		"stack": [
-	// 			"main.readFile: .../example/main.go: 6",
-	// 			"main.parseFile: .../example/main.go: 12",
-	// 			"main.main: .../example/main.go: 20",
+	// 			"main.readFile:.../example/main.go:6",
+	// 			"main.parseFile:.../example/main.go:12",
+	// 			"main.main:.../example/main.go:20",
 	// 		]
 	// 	},
 	// 	"wrap": [
 	// 		{
 	// 			"message": "error reading file 'example.json'",
-	// 			"stack": "main.readFile: .../example/main.go: 6"
+	// 			"stack": "main.readFile:.../example/main.go:6"
 	// 		}
 	// 	]
 	// }
@@ -76,16 +72,16 @@ func ExampleUnpackedError_ToJSON_global() {
 
 // Hack to run examples that don't have a predictable output (i.e. all
 // examples that involve printing stack traces).
-func TestExampleUnpackedError_ToJSON_global(t *testing.T) {
+func TestExampleToJSON_global(t *testing.T) {
 	if !testing.Verbose() {
 		return
 	}
-	ExampleUnpackedError_ToJSON_global()
+	ExampleToJSON_global()
 }
 
 // Demonstrates JSON formatting of wrapped errors that originate from
 // local root errors (created at the source of the error via eris.New).
-func ExampleUnpackedError_ToJSON_local() {
+func ExampleToJSON_local() {
 	// example func that returns an eris error
 	readFile := func(fname string) error {
 		return eris.New("unexpected EOF") // line 3
@@ -123,9 +119,7 @@ func ExampleUnpackedError_ToJSON_local() {
 
 	// unpack and print the raw error
 	err := printFile("example.json") // line 37
-	uerr := eris.Unpack(err)
-	format := eris.NewDefaultFormat(true) // true: include stack trace
-	u, _ := json.MarshalIndent(uerr.ToJSON(format), "", "\t")
+	u, _ := json.MarshalIndent(eris.ToJSON(err, true), "", "\t")
 	fmt.Printf("%v\n", string(u))
 
 	// example output:
@@ -133,13 +127,13 @@ func ExampleUnpackedError_ToJSON_local() {
 	// 	"root": {
 	// 		"message": "unexpected EOF",
 	// 		"stack": [
-	// 			"main.readFile: .../example/main.go: 3",
-	// 			"main.parseFile: .../example/main.go: 9",
-	// 			"main.parseFile: .../example/main.go: 11",
-	// 			"main.processFile: .../example/main.go: 19",
-	// 			"main.printFile: .../example/main.go: 29",
-	// 			"main.printFile: .../example/main.go: 31",
-	// 			"main.main: .../example/main.go: 37",
+	// 			"main.readFile:.../example/main.go:3",
+	// 			"main.parseFile:.../example/main.go:9",
+	// 			"main.parseFile:.../example/main.go:11",
+	// 			"main.processFile:.../example/main.go:19",
+	// 			"main.printFile:.../example/main.go:29",
+	// 			"main.printFile:.../example/main.go:31",
+	// 			"main.main:.../example/main.go:37",
 	// 		]
 	// 	},
 	// 	"wrap": [
@@ -149,22 +143,22 @@ func ExampleUnpackedError_ToJSON_local() {
 	// 		},
 	// 		{
 	// 			"message": "error printing file 'example.json'",
-	// 			"stack": "main.printFile: .../example/main.go: 31"
+	// 			"stack": "main.printFile:.../example/main.go:31"
 	// 		}
 	// 	]
 	// }
 }
 
-func TestExampleUnpackedError_ToJSON_local(t *testing.T) {
+func TestExampleToJSON_local(t *testing.T) {
 	if !testing.Verbose() {
 		return
 	}
-	ExampleUnpackedError_ToJSON_local()
+	ExampleToJSON_local()
 }
 
 // Demonstrates string formatting of wrapped errors that originate from
 // external (non-eris) error types.
-func ExampleUnpackedError_ToString_external() {
+func ExampleToString_external() {
 	// example func that returns an IO error
 	readFile := func(fname string) error {
 		return io.ErrUnexpectedEOF
@@ -172,16 +166,13 @@ func ExampleUnpackedError_ToString_external() {
 
 	// unpack and print the error
 	err := readFile("example.json")
-	uerr := eris.Unpack(err)
-	format := eris.NewDefaultFormat(false) // false: omit stack trace
-	fmt.Println(uerr.ToString(format))
-	// Output:
+	fmt.Println(eris.ToString(err, false)) // false: omit stack trace
 	// unexpected EOF
 }
 
 // Demonstrates string formatting of wrapped errors that originate from
 // global root errors (created via eris.NewGlobal).
-func ExampleUnpackedError_ToString_global() {
+func ExampleToString_global() {
 	// declare a "global" error type
 	ErrUnexpectedEOF := eris.NewGlobal("unexpected EOF")
 
@@ -210,29 +201,27 @@ func ExampleUnpackedError_ToString_global() {
 	// unexpected EOF: error reading file 'example.json'
 
 	// unpack and print the error via uerr.ToString(...)
-	uerr := eris.Unpack(err)
-	format := eris.NewDefaultFormat(true) // true: include stack trace
-	fmt.Printf("%v\n", uerr.ToString(format))
+	fmt.Printf("%v\n", eris.ToString(err, true)) // true: include stack trace
 
 	// example output:
 	// unexpected EOF
-	// 	main.readFile: .../example/main.go: 6
-	// 	main.parseFile: .../example/main.go: 12
-	// 	main.main: .../example/main.go: 20
+	// 	main.readFile:.../example/main.go:6
+	// 	main.parseFile:.../example/main.go:12
+	// 	main.main:.../example/main.go:20
 	// error reading file 'example.json'
-	// 	main.readFile: .../example/main.go: 6
+	// 	main.readFile:.../example/main.go:6
 }
 
-func TestExampleUnpackedError_ToString_global(t *testing.T) {
+func TestExampleToString_global(t *testing.T) {
 	if !testing.Verbose() {
 		return
 	}
-	ExampleUnpackedError_ToString_global()
+	ExampleToString_global()
 }
 
 // Demonstrates string formatting of wrapped errors that originate from
 // local root errors (created at the source of the error via eris.New).
-func ExampleUnpackedError_ToString_local() {
+func ExampleToString_local() {
 	// example func that returns an eris error
 	readFile := func(fname string) error {
 		return eris.New("unexpected EOF") // line 3
@@ -258,23 +247,21 @@ func ExampleUnpackedError_ToString_local() {
 	// unexpected EOF: error reading file 'example.json'
 
 	// unpack and print the error via uerr.ToString(...)
-	uerr := eris.Unpack(err)
-	format := eris.NewDefaultFormat(true) // true: include stack trace
-	fmt.Println(uerr.ToString(format))
+	fmt.Println(eris.ToString(err, true)) // true: include stack trace
 
 	// example output:
 	// unexpected EOF
-	// 	main.readFile: .../example/main.go: 3
-	// 	main.parseFile: .../example/main.go: 9
-	// 	main.parseFile: .../example/main.go: 11
-	// 	main.main: .../example/main.go: 17
+	// 	main.readFile:.../example/main.go:3
+	// 	main.parseFile:.../example/main.go:9
+	// 	main.parseFile:.../example/main.go:11
+	// 	main.main:.../example/main.go:17
 	// error reading file 'example.json'
-	// 	main.parseFile: .../example/main.go: 11
+	// 	main.parseFile:.../example/main.go:11
 }
 
-func TestExampleUnpackedError_ToString_local(t *testing.T) {
+func TestExampleToString_local(t *testing.T) {
 	if !testing.Verbose() {
 		return
 	}
-	ExampleUnpackedError_ToString_local()
+	ExampleToString_local()
 }
