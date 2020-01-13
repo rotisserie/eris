@@ -177,6 +177,24 @@ if eris.Is(err, ErrNotFound) {
 }
 ```
 
+`eris.Is` also works for wrapped error targets by checking if the target is completely contained within the inspected error.
+
+```golang
+// eris.Is should return true for the input error "error getting resource 'res1': failed to get relative path: error internal server"
+// and target "failed to get relative path: error internal server"
+target := eris.Wrap(eris.New("error internal server"), "failed to get relative path")
+err := eris.Wrapf(target, "error getting resource '%v'", id)
+eris.Is(err, target) // true
+
+// it should also return true for the target "error getting resource 'res1': failed to get relative path"
+target = eris.Wrapf(eris.New("failed to get relative path"), "error getting resource '%v'", id)
+eris.Is(err, target) // true
+
+// if should return false for a target that has a different order "error getting resource '%v': error internal server"
+target = eris.Wrapf(eris.New("error internal server"), "error getting resource '%v'", id)
+eris.Is(err, target) // false
+```
+
 [`eris.Cause`](https://pkg.go.dev/github.com/rotisserie/eris#Cause) unwraps an error until it reaches the cause, which is defined as the first (i.e. root) error in the chain.
 
 ```golang

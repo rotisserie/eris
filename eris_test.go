@@ -302,7 +302,7 @@ func TestErrorIs(t *testing.T) {
 			compare: eris.New("even more context"),
 			output:  true,
 		},
-		"root error (external)": {
+		"wrapped error from external root error": {
 			cause:   externalErr,
 			input:   []string{"additional context", "even more context"},
 			compare: externalErr,
@@ -312,6 +312,30 @@ func TestErrorIs(t *testing.T) {
 			cause:   globalErr,
 			input:   []string{"additional context", "even more context"},
 			compare: eris.Wrap(globalErr, "additional context"),
+			output:  true,
+		},
+		"wrapped error against a wrapped error with a different order": {
+			cause:   eris.New("root error"),
+			input:   []string{"additional context", "even more context"},
+			compare: eris.Wrap(eris.New("additional context"), "root error"),
+			output:  false,
+		},
+		"wrapped error against a root error": {
+			cause:   eris.New("root error"),
+			input:   []string{"additional context", "even more context"},
+			compare: eris.New("additional context"),
+			output:  true,
+		},
+		"wrapped error against another wrapped error": {
+			cause:   eris.New("root error"),
+			input:   []string{"additional context", "even more context"},
+			compare: eris.Wrap(eris.New("root error"), "additional context"),
+			output:  true,
+		},
+		"wrapped error against another wrapped error with different root": {
+			cause:   eris.New("root error"),
+			input:   []string{"additional context", "even more context"},
+			compare: eris.Wrap(eris.New("additional context"), "even more context"),
 			output:  true,
 		},
 		"comparing against external error": {

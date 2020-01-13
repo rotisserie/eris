@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 )
 
 // New creates a new root error with a static message.
@@ -101,7 +102,7 @@ func Unwrap(err error) error {
 	return u.Unwrap()
 }
 
-// Is reports whether any error in err's chain matches target.
+// Is reports whether any error in err's chain matches the target.
 //
 // The chain consists of err itself followed by the sequence of errors obtained by repeatedly calling Unwrap.
 //
@@ -117,7 +118,7 @@ func Is(err, target error) bool {
 		if isComparable && err == target {
 			return true
 		}
-		if x, ok := err.(interface{ Is(error) bool }); ok && x.Is(target) {
+		if e, ok := err.(interface{ Is(error) bool }); ok && e.Is(target) {
 			return true
 		}
 		if err = Unwrap(err); err == nil {
@@ -201,8 +202,11 @@ func (e *wrapError) Format(s fmt.State, verb rune) {
 }
 
 func (e *wrapError) Is(target error) bool {
-	if err, ok := target.(*wrapError); ok {
-		return e.msg == err.msg
+	switch t := target.(type) {
+	case *rootError:
+		return e.msg == t.msg
+	case *wrapError:
+		return strings.Contains(e.Error(), t.Error())
 	}
 	return e.msg == target.Error()
 }

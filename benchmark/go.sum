@@ -1,4 +1,4 @@
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
-github.com/rotisserie/eris v0.3.0 h1:NMwJvCWWTrbhgXakSUqbI//HmFt5B5KWd6NVH+9+yF0=
-github.com/rotisserie/eris v0.3.0/go.mod h1:DfmQXutjjasYYOYqyqgnevbDzsVLOwG/KWlwVkBoU3U=
+github.com/rotisserie/eris v0.3.1-0.20200503213801-df2bfb190236 h1:6wtMPBMxlBU6wWYVUS31TeDVgosFzpnImifekAFlhgE=
+github.com/rotisserie/eris v0.3.1-0.20200503213801-df2bfb190236/go.mod h1:lODN/gtqebxPHRbCcWeCYOE350FC2M3V/oAPT2wKxAU=
