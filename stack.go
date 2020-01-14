@@ -31,6 +31,30 @@ func (s *Stack) insertFrame(wFrames []StackFrame) {
 	}
 }
 
+// insertPCs inserts a wrap error program counter (pc) into the correct place of the root error stack trace.
+// TODO: this function can be optimized
+func (rootPCs *stack) insertPCs(stackArr [][]uintptr) {
+	for _, wrapPCs := range stackArr {
+		if rootPCs == nil || len(wrapPCs) == 0 {
+			continue
+		} else if len(wrapPCs) == 1 {
+			// append the pc to the end if there's only one
+			*rootPCs = append(*rootPCs, wrapPCs[0])
+			continue
+		}
+		for at, f := range *rootPCs {
+			if f == wrapPCs[0] {
+				// break if the stack already contains the pc
+				break
+			} else if f == wrapPCs[1] {
+				// insert the first pc into the stack if the second pc is found
+				*rootPCs = insertPC(*rootPCs, wrapPCs[0], at)
+				break
+			}
+		}
+	}
+}
+
 // format returns an array of formatted stack frames.
 func (s Stack) format(sep string) []string {
 	var str []string
@@ -106,4 +130,9 @@ func (s *stack) get() []StackFrame {
 func insert(s Stack, f StackFrame, at int) Stack {
 	// this inserts the frame by breaking the stack into two slices (s[:at] and s[at:])
 	return append(s[:at], append([]StackFrame{f}, s[at:]...)...)
+}
+
+func insertPC(s stack, u uintptr, at int) stack {
+	// this inserts the pc by breaking the stack into two slices (s[:at] and s[at:])
+	return append(s[:at], append([]uintptr{u}, s[at:]...)...)
 }

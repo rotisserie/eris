@@ -16,7 +16,8 @@ Package `eris` provides a better way to handle, trace, and log errors in Go.
   * [Interpreting eris stack traces](#interpreting-eris-stack-traces)
   * [Inspecting errors](#inspecting-errors)
   * [Formatting with custom separators](#formatting-with-custom-separators)
-  * [Writing your own custom format](#writing-your-own-custom-format)
+  * [Writing a custom output format](#writing-a-custom-output-format)
+  * [Sending error traces to Sentry](#sending-error-traces-to-sentry)
 - [Comparison to other packages (e.g. pkg/errors)](#comparison-to-other-packages-eg-pkgerrors)
   * [Error formatting and stack traces](#error-formatting-and-stack-traces)
 - [Migrating to eris](#migrating-to-eris)
@@ -110,7 +111,7 @@ formattedStr := eris.ToString(err, true)
 fmt.Println(formattedStr)
 ```
 
-`eris` also enables control over the [default format's separators](#formatting-with-custom-separators) and allows advanced users to write their own [custom formats](#writing-your-own-custom-format).
+`eris` also enables control over the [default format's separators](#formatting-with-custom-separators) and allows advanced users to write their own [custom output format](#writing-a-custom-output-format).
 
 ### Interpreting eris stack traces
 
@@ -164,7 +165,7 @@ if eris.Cause(err) == ErrNotFound {
 
 ### Formatting with custom separators
 
-For users who need more control over the error output, `eris` allows for some control over the separators between each piece of the output via the [`eris.Format`](https://godoc.org/github.com/rotisserie/eris#Format) type. Currently, the default order of the error and stack trace output is rigid. If this isn't flexible enough for your needs, see the [custom formatting](#writing-your-own-custom-format) section below. To format errors with custom separators, you can define and pass a format object to [`eris.ToCustomString`](https://godoc.org/github.com/rotisserie/eris#ToCustomString) or [`eris.ToCustomJSON`](https://godoc.org/github.com/rotisserie/eris#ToCustomJSON).
+For users who need more control over the error output, `eris` allows for some control over the separators between each piece of the output via the [`eris.Format`](https://godoc.org/github.com/rotisserie/eris#Format) type. Currently, the default order of the error and stack trace output is rigid. If this isn't flexible enough for your needs, see the [custom output format](#writing-a-custom-output-format) section below. To format errors with custom separators, you can define and pass a format object to [`eris.ToCustomString`](https://godoc.org/github.com/rotisserie/eris#ToCustomString) or [`eris.ToCustomJSON`](https://godoc.org/github.com/rotisserie/eris#ToCustomJSON).
 
 ```golang
 // format the error to a string with custom separators
@@ -186,9 +187,38 @@ fmt.Println(formattedStr)
 //   main.readFile | .../example/main.go | 6
 ```
 
-### Writing your own custom format
+### Writing a custom output format
 
-`eris` also allows advanced users to write their own custom formats in case the default format doesn't fit your requirements. The [`UnpackedError`](https://godoc.org/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrRoot` and `ErrChain` fields correspond to the root error and wrap error chain, respectively. If any other error type is unpacked, it will appear in the `ExternalErr` field. You can access all of the information contained in an error via [`eris.Unpack`](https://godoc.org/github.com/rotisserie/eris#Unpack).
+`eris` also allows advanced users to construct custom error strings or objects in case the default error doesn't fit their requirements. The [`UnpackedError`](https://godoc.org/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrRoot` and `ErrChain` fields correspond to the root error and wrap error chain, respectively. If any other error type is unpacked, it will appear in the `ExternalErr` field. You can access all of the information contained in an error via [`eris.Unpack`](https://godoc.org/github.com/rotisserie/eris#Unpack).
+
+```golang
+// get the unpacked error object
+uErr := eris.Unpack(err)
+// send only the root error message to a logging server instead of the complete error trace
+sentry.CaptureMessage(uErr.ErrRoot.Msg)
+```
+
+### Sending error traces to Sentry
+
+`eris` supports sending your error traces to [Sentry](https://sentry.io/) using the Sentry Go [client SDK](https://github.com/getsentry/sentry-go). You can run the example that generated the following output on Sentry UI using the command `go run eris/sentry/example.go -dsn=<DSN>` in our [examples](https://github.com/rotisserie/examples) repository.
+
+```
+*eris.wrapError: test: wrap 1: wrap 2: wrap 3
+  File "main.go", line 19, in Example
+    return eris.New("test")
+  File "main.go", line 23, in WrapExample
+    err := Example()
+  File "main.go", line 25, in WrapExample
+    return eris.Wrap(err, "wrap 1")
+  File "main.go", line 31, in WrapSecondExample
+    err := WrapExample()
+  File "main.go", line 33, in WrapSecondExample
+    return eris.Wrap(err, "wrap 2")
+  File "main.go", line 44, in main
+    err := WrapSecondExample()
+  File "main.go", line 45, in main
+    err = eris.Wrap(err, "wrap 3")
+```
 
 ## Comparison to other packages (e.g. pkg/errors)
 

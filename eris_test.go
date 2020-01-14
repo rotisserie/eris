@@ -3,6 +3,9 @@ package eris_test
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/rotisserie/eris"
@@ -250,6 +253,77 @@ func TestErrorFormatting(t *testing.T) {
 			_ = fmt.Sprintf("error formatting results (%v):\n", desc)
 			_ = fmt.Sprintf("%v\n", err)
 			_ = fmt.Sprintf("%+v", err)
+		})
+	}
+}
+
+func getFrames(frames []uintptr) []eris.StackFrame {
+	var sFrames []eris.StackFrame
+	for _, u := range frames {
+		pc := u - 1
+		fn := runtime.FuncForPC(pc)
+		if fn == nil {
+			frame := eris.StackFrame{
+				Name: "unknown",
+				File: "unknown",
+			}
+			sFrames = append(sFrames, frame)
+		}
+
+		name := fn.Name()
+		i := strings.LastIndex(name, "/")
+		name = name[i+1:]
+		file, line := fn.FileLine(pc)
+
+		frame := eris.StackFrame{
+			Name: name,
+			File: file,
+			Line: line,
+		}
+		sFrames = append(sFrames, frame)
+	}
+	return sFrames
+}
+
+func TestStackFrames(t *testing.T) {
+	globalErr := eris.NewGlobal("global error")
+	tests := map[string]struct {
+		cause error    // root error
+		input []string // input for error wrapping
+	}{
+		"root error": {
+			cause: eris.New("root error"),
+		},
+		"wrapped error": {
+			cause: eris.New("root error"),
+			input: []string{"additional context", "even more context"},
+		},
+		"external error": {
+			cause: errors.New("external error"),
+		},
+		"wrapped external error": {
+			cause: errors.New("external error"),
+			input: []string{"additional context", "even more context"},
+		},
+		"global root error": {
+			cause: globalErr,
+		},
+		"wrapped error from global root error": {
+			cause: globalErr,
+			input: []string{"additional context", "even more context"},
+		},
+		"nil error": {
+			cause: nil,
+		},
+	}
+	for desc, tc := range tests {
+		t.Run(desc, func(t *testing.T) {
+			err := setupTestCase(false, tc.cause, tc.input)
+			uErr := eris.Unpack(err)
+			sFrames := eris.Stack(getFrames(eris.StackFrames(err)))
+			if !reflect.DeepEqual(uErr.ErrRoot.Stack, sFrames) {
+				t.Errorf("Stackframes() returned { %v }, was expecting { %v }", sFrames, uErr.ErrRoot.Stack)
+			}
 		})
 	}
 }

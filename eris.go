@@ -129,6 +129,22 @@ func Cause(err error) error {
 	}
 }
 
+// StackFrames returns the trace of an error in the form of a program counter slice.
+// Use this method if you want to pass the eris stack trace to some other error tracing library.
+func StackFrames(e error) []uintptr {
+	if e == nil {
+		return []uintptr{}
+	}
+	switch err := e.(type) {
+	case *wrapError:
+		return err.StackFrames()
+	case *rootError:
+		return err.StackFrames()
+	default:
+		return []uintptr{}
+	}
+}
+
 type rootError struct {
 	global bool
 	msg    string
@@ -141,6 +157,10 @@ func (e *rootError) Error() string {
 
 func (e *rootError) Format(s fmt.State, verb rune) {
 	printError(e, s, verb)
+}
+
+func (e *rootError) StackFrames() []uintptr {
+	return *e.stack
 }
 
 func (e *rootError) Is(target error) bool {
@@ -162,6 +182,24 @@ func (e *wrapError) Error() string {
 
 func (e *wrapError) Format(s fmt.State, verb rune) {
 	printError(e, s, verb)
+}
+
+func (e *wrapError) StackFrames() []uintptr {
+	var frames *stack
+	stackArr := [][]uintptr{*e.stack}
+	for {
+		nextErr := Unwrap(e)
+		switch nextErr := nextErr.(type) {
+		case *wrapError:
+			stackArr = append(stackArr, *nextErr.stack)
+		case *rootError:
+			rFrames := (stack)(nextErr.StackFrames())
+			frames = &rFrames
+			frames.insertPCs(stackArr)
+			return *frames
+		}
+		e = nextErr.(*wrapError)
+	}
 }
 
 func (e *wrapError) Is(target error) bool {
