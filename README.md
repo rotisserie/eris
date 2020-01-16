@@ -28,7 +28,7 @@ Package `eris` provides a better way to handle, trace, and log errors in Go.
 
 Named after the Greek goddess of strife and discord, this package is designed to give you more control over error handling via error wrapping, stack tracing, and output formatting. `eris` was inspired by a simple question: what if you could fix a bug without wasting time replicating the issue or digging through the code?
 
-`eris` is intended to help developers diagnose issues faster. The [example](example_logger_test.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the source to the top of the call stack.
+`eris` is intended to help developers diagnose issues faster. The [example](https://github.com/rotisserie/examples/blob/master/eris/logging/example.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the source to the top of the call stack.
 
 ```json
 {
@@ -36,27 +36,27 @@ Named after the Greek goddess of strife and discord, this package is designed to
     "root":{
       "message":"error internal server",
       "stack":[
-        "eris_test.GetRelPath:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:58",
-        "eris_test.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:79",
-        "eris_test.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:82",
-        "eris_test.Example_logger:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:140",
+        "main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:61",
+        "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:82",
+        "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:85",
+        "main.main:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:143"
       ]
     },
     "wrap":[
       {
         "message":"Rel: can't make ./some/malformed/absolute/path/data.json relative to /Users/roti/",
-        "stack":"eris_test.GetRelPath:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:58"
+        "stack":"main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:61"
       },
       {
         "message":"failed to get relative path for resource 'res2'",
-        "stack":"eris_test.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:82"
+        "stack":"main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:85"
       }
     ]
   },
   "level":"error",
   "method":"ProcessResource",
   "msg":"method completed with error",
-  "time":"2020-01-12T13:50:00-05:00"
+  "time":"2020-01-16T11:20:01-05:00"
 }
 ```
 
@@ -121,16 +121,16 @@ Errors created with this package contain stack traces that are managed automatic
   "root":{
     "message":"error bad request", // root cause
     "stack":[
-      "eris_test.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:25", // location of the root
-      "eris_test.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:26", // location of Wrap call
-      "eris_test.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:68",
-      "eris_test.Example_logger:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:140",
+      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:28", // location of the root
+      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:29", // location of Wrap call
+      "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:71",
+      "main.main:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:143"
     ]
   },
   "wrap":[
     {
       "message":"received a request with no ID", // additional context
-      "stack":"eris_test.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:26" // location of Wrap call
+      "stack":"main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:29" // location of Wrap call
     }
   ]
 }
@@ -164,35 +164,31 @@ if eris.Cause(err) == ErrNotFound {
 
 ### Formatting with custom separators
 
-The default format in `eris` is returned by the method [`NewDefaultFormat()`](https://godoc.org/github.com/rotisserie/eris#NewDefaultFormat). Below you can see what a default formatted error in `eris` might look like.
+For users who need more control over the error output, `eris` allows for some control over the separators between each piece of the output via the [`eris.Format`](https://godoc.org/github.com/rotisserie/eris#Format) type. Currently, the default order of the error and stack trace output is rigid. If this isn't flexible enough for your needs, see the [custom formatting](#writing-your-own-custom-format) section below. To format errors with custom separators, you can define and pass a format object to [`eris.ToCustomString`](https://godoc.org/github.com/rotisserie/eris#ToCustomString) or [`eris.ToCustomJSON`](https://godoc.org/github.com/rotisserie/eris#ToCustomJSON).
 
-Errors printed without trace using `fmt.Printf("%v\n", err)`
+```golang
+// format the error to a string with custom separators
+formattedStr := eris.ToCustomString(err, Format{
+  WithTrace: true,     // flag that enables stack trace output
+  MsgStackSep: "\n",   // separator between error messages and stack frame data
+  PreStackSep: "\t",   // separator at the beginning of each stack frame
+  StackElemSep: " | ", // separator between elements of each stack frame
+  ErrorSep: "\n",      // separator between each error in the chain
+})
+fmt.Println(formattedStr)
 
+// example output:
+// unexpected EOF
+//   main.readFile | .../example/main.go | 6
+//   main.parseFile | .../example/main.go | 12
+//   main.main | .../example/main.go | 20
+// error reading file 'example.json'
+//   main.readFile | .../example/main.go | 6
 ```
-even more context: additional context: root error
-```
-
-Errors printed with trace using `fmt.Printf("%+v\n", err)`
-
-```
-even more context
-        eris_test.setupTestCase: ../eris/eris_test.go: 17
-additional context
-        eris_test.setupTestCase: ../eris/eris_test.go: 17
-root error
-        eris_test.setupTestCase: ../eris/eris_test.go: 17
-        eris_test.TestErrorFormatting: ../eris/eris_test.go: 226
-        testing.tRunner: ../go1.11.4/src/testing/testing.go: 827
-        runtime.goexit: ../go1.11.4/src/runtime/asm_amd64.s: 1333
-```
-
-'eris' also provides developers a way to define a custom format to print the errors. The [`Format`](https://godoc.org/github.com/rotisserie/eris#Format) object defines separators for various components of the error/trace and can be passed to utility methods for printing string and JSON formats.
 
 ### Writing your own custom format
 
-The [`UnpackedError`](https://godoc.org/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrChain` and `ErrRoot` fields correspond to `wrapError` and `rootError` types, respectively. If any other error type is unpacked, it will appear in the ExternalErr field.
-
-The [`Unpack()`](https://godoc.org/github.com/rotisserie/eris#Unpack) method returns the corresponding `UnpackedError` object for a given error. This object can also be converted to string and JSON for logging and printing error traces. This can be done by using the methods [`ToString()`](https://godoc.org/github.com/rotisserie/eris#UnpackedError.ToString) and [`ToJSON()`](https://godoc.org/github.com/rotisserie/eris#UnpackedError.ToJSON). Note the `ToJSON()` method returns a `map[string]interface{}` type which can be marshalled to JSON using the `encoding/json` package.
+`eris` also allows advanced users to write their own custom formats in case the default format doesn't fit your requirements. The [`UnpackedError`](https://godoc.org/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrRoot` and `ErrChain` fields correspond to the root error and wrap error chain, respectively. If any other error type is unpacked, it will appear in the `ExternalErr` field. You can access all of the information contained in an error via [`eris.Unpack`](https://godoc.org/github.com/rotisserie/eris#Unpack).
 
 ## Comparison to other packages (e.g. pkg/errors)
 
@@ -202,12 +198,11 @@ Readability is a major design requirement for `eris`. In addition to the JSON ou
 
 ```
 error not found
-  eris_test.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:53
-  eris_test.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:77
-  eris_test.Example_logger:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:144
-  eris_test.TestExample_logger:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:162
+  main.GetResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:52
+  main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:76
+  main.main:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:143
 failed to get resource 'res1'
-  eris_test.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:53
+  main.GetResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:52
 ```
 
 The `eris` error stack is designed to be easier to interpret than other error handling packages, and it achieves this by omitting extraneous information and avoiding unnecessary repetition. The stack trace above omits calls from Go's `runtime` package and includes just a single frame for wrapped layers which are inserted into the root error stack trace in the correct order. `eris` also correctly handles and updates stack traces for global error values.
@@ -216,27 +211,23 @@ The output of `pkg/errors` for the same error is shown below. In this case, the 
 
 ```
 error not found
-github.com/rotisserie/eris_test.init
-  /Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:19
+main.init
+  /Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:18
 runtime.doInit
   /usr/local/Cellar/go/1.13.6/libexec/src/runtime/proc.go:5222
-runtime.doInit
-  /usr/local/Cellar/go/1.13.6/libexec/src/runtime/proc.go:5217
 runtime.main
   /usr/local/Cellar/go/1.13.6/libexec/src/runtime/proc.go:190
 runtime.goexit
   /usr/local/Cellar/go/1.13.6/libexec/src/runtime/asm_amd64.s:1357
 failed to get resource 'res1'
-github.com/rotisserie/eris_test.GetResource
-  /Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:53
-github.com/rotisserie/eris_test.ProcessResource
-  /Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:77
-github.com/rotisserie/eris_test.Example_logger
-  /Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:144
-github.com/rotisserie/eris_test.TestExample_logger
-  /Users/roti/go/src/github.com/rotisserie/eris/example_logger_test.go:162
-testing.tRunner
-  /usr/local/Cellar/go/1.13.6/libexec/src/testing/testing.go:909
+main.GetResource
+  /Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:52
+main.ProcessResource
+  /Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:76
+main.main
+  /Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:143
+runtime.main
+  /usr/local/Cellar/go/1.13.6/libexec/src/runtime/proc.go:203
 runtime.goexit
   /usr/local/Cellar/go/1.13.6/libexec/src/runtime/asm_amd64.s:1357
 ```
