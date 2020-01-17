@@ -9,15 +9,6 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-// Hack to run examples that don't have a predictable output (i.e. all
-// examples that involve printing stack traces).
-func TestExample_logger(t *testing.T) {
-	if !testing.Verbose() {
-		return
-	}
-	Example_logger()
-}
-
 // Demonstrates JSON formatting of wrapped errors that originate from
 // external (non-eris) error types.
 func ExampleToJSON_external() {
@@ -37,6 +28,8 @@ func ExampleToJSON_external() {
 	// }
 }
 
+// Hack to run examples that don't have a predictable output (i.e. all
+// examples that involve printing stack traces).
 func TestExampleToJSON_external(t *testing.T) {
 	if !testing.Verbose() {
 		return
