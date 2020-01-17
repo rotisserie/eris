@@ -240,7 +240,7 @@ Many of your dependencies will likely still use [pkg/errors](https://github.com/
 
 ## Contributing
 
-If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal. We're also available to discuss potential issues and features on our [Discord channel](https://discordapp.com/channels/659952923073183749/659952923073183756).
+If you'd like to contribute to `eris`, we'd love your input! Please submit an issue first so we can discuss your proposal. We're also available to discuss potential issues and features on our [Discord channel](https://discord.gg/gMfXeXR).
 
 -------------------------------------------------------------------------------
 
@@ -256,7 +256,7 @@ Released under the [MIT License].
 [cov]: https://codecov.io/gh/rotisserie/eris
 [report-img]: https://goreportcard.com/badge/github.com/rotisserie/eris
 [report]: https://goreportcard.com/report/github.com/rotisserie/eris
-[chat-img]: https://img.shields.io/discord/659952923073183749
-[chat]: https://discordapp.com/channels/659952923073183749/659952923073183756
+[chat-img]: https://img.shields.io/discord/659952923073183749?color=738adb&label=discord&logo=discord
+[chat]: https://discord.gg/gMfXeXR
 [awesome-img]: https://awesome.re/mentioned-badge.svg
 [awesome]: https://github.com/avelino/awesome-go#error-handling
