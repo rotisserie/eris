@@ -16,6 +16,7 @@ func (s *Stack) insertFrame(wFrames []StackFrame) {
 	} else if len(wFrames) == 1 {
 		// append the frame to the end if there's only one
 		*s = append(*s, wFrames[0])
+		return
 	}
 
 	for at, f := range *s {
