@@ -1,4 +1,19 @@
 
+<a name="v0.2.0"></a>
+## [v0.2.0](https://github.com/rotisserie/eris/compare/v0.1.1...v0.2.0) (2020-01-17)
+
+### Bug Fixes
+
+* add discord invite link ([#65](https://github.com/rotisserie/eris/issues/65))
+* copy global root errors to ensure stack traces are isolated ([#58](https://github.com/rotisserie/eris/issues/58), [#59](https://github.com/rotisserie/eris/issues/59))
+
+### Features
+
+* eris errors are now compatible with sentry error tracing ([#60](https://github.com/rotisserie/eris/issues/60))
+* improve default formatters and add custom format support ([#57](https://github.com/rotisserie/eris/issues/57))
+* improve error wrapping, stack trace management, and formatting ([#46](https://github.com/rotisserie/eris/issues/46))
+
+
 <a name="v0.1.1"></a>
 ## [v0.1.1](https://github.com/rotisserie/eris/compare/v0.1.0...v0.1.1) (2019-12-26)
 
