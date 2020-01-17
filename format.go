@@ -87,6 +87,7 @@ func ToCustomString(err error, format Format) string {
 			str += format.ErrorSep
 		}
 		str += eLink.formatStr(format)
+		str += format.MsgStackSep
 	}
 
 	if upErr.ExternalErr != "" {
