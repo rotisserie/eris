@@ -9,8 +9,8 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-// Demonstrates JSON formatting of wrapped errors that originate from
-// external (non-eris) error types.
+// Demonstrates JSON formatting of wrapped errors that originate from external (non-eris) error
+// types. You can try this example in the Go playground (https://play.golang.org/p/29yCByzK8wT).
 func ExampleToJSON_external() {
 	// example func that returns an IO error
 	readFile := func(fname string) error {
@@ -28,8 +28,8 @@ func ExampleToJSON_external() {
 	// }
 }
 
-// Hack to run examples that don't have a predictable output (i.e. all
-// examples that involve printing stack traces).
+// Hack to run examples that don't have a predictable output (i.e. all examples that involve
+// printing stack traces).
 func TestExampleToJSON_external(t *testing.T) {
 	if !testing.Verbose() {
 		return
@@ -37,8 +37,9 @@ func TestExampleToJSON_external(t *testing.T) {
 	ExampleToJSON_external()
 }
 
-// Demonstrates JSON formatting of wrapped errors that originate from
-// global root errors (created via eris.NewGlobal).
+// Demonstrates JSON formatting of wrapped errors that originate from global root errors (created
+// via eris.NewGlobal). You can try this example in the Go playground
+// (https://play.golang.org/p/jkZHLfHsYHV).
 func ExampleToJSON_global() {
 	// declare a "global" error type
 	ErrUnexpectedEOF := eris.NewGlobal("unexpected EOF")
@@ -89,8 +90,9 @@ func TestExampleToJSON_global(t *testing.T) {
 	ExampleToJSON_global()
 }
 
-// Demonstrates JSON formatting of wrapped errors that originate from
-// local root errors (created at the source of the error via eris.New).
+// Demonstrates JSON formatting of wrapped errors that originate from local root errors (created at
+// the source of the error via eris.New). You can try this example in the Go playground
+// (https://play.golang.org/p/66nsuoOgQWu).
 func ExampleToJSON_local() {
 	// example func that returns an eris error
 	readFile := func(fname string) error {
@@ -166,8 +168,8 @@ func TestExampleToJSON_local(t *testing.T) {
 	ExampleToJSON_local()
 }
 
-// Demonstrates string formatting of wrapped errors that originate from
-// external (non-eris) error types.
+// Demonstrates string formatting of wrapped errors that originate from external (non-eris) error
+// types. You can try this example in the Go playground (https://play.golang.org/p/OKbU3gzIZvZ).
 func ExampleToString_external() {
 	// example func that returns an IO error
 	readFile := func(fname string) error {
@@ -189,8 +191,9 @@ func TestExampleToString_external(t *testing.T) {
 	ExampleToString_external()
 }
 
-// Demonstrates string formatting of wrapped errors that originate from
-// global root errors (created via eris.NewGlobal).
+// Demonstrates string formatting of wrapped errors that originate from global root errors (created
+// via eris.NewGlobal). You can try this example in the Go playground
+// (https://play.golang.org/p/8YgyDwk9xBJ).
 func ExampleToString_global() {
 	// declare a "global" error type
 	ErrUnexpectedEOF := eris.NewGlobal("unexpected EOF")
@@ -238,8 +241,9 @@ func TestExampleToString_global(t *testing.T) {
 	ExampleToString_global()
 }
 
-// Demonstrates string formatting of wrapped errors that originate from
-// local root errors (created at the source of the error via eris.New).
+// Demonstrates string formatting of wrapped errors that originate from local root errors (created
+// at the source of the error via eris.New).  You can try this example in the Go playground
+// (https://play.golang.org/p/d49gTNx3OtA).
 func ExampleToString_local() {
 	// example func that returns an eris error
 	readFile := func(fname string) error {
