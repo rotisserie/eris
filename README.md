@@ -67,7 +67,7 @@ Many of the methods in this package will look familiar if you've used [pkg/error
 
 ### Creating errors
 
-Creating errors is simple via [`eris.New`](https://godoc.org/github.com/rotisserie/eris#New) and [`eris.NewGlobal`](https://godoc.org/github.com/rotisserie/eris#NewGlobal).
+Creating errors is simple via [`eris.New`](https://godoc.org/github.com/rotisserie/eris#New) and [`eris.NewGlobal`](https://godoc.org/github.com/rotisserie/eris#NewGlobal). If you use the pattern of exporting global error values, you should declare them with `eris.NewGlobal` to let `eris` know that it should reset the stack trace during error wrapping. Otherwise, `eris.New` should be used if you prefer declaring errors when they're returned.
 
 ```golang
 var (
