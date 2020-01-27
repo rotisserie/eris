@@ -4,6 +4,38 @@ import (
 	"fmt"
 )
 
+// UnpackedError represents complete information about an error.
+//
+// This type can be used for custom error logging and parsing. Use `eris.Unpack` to build an UnpackedError
+// from any error type. The ErrChain and ErrRoot fields correspond to `wrapError` and `rootError` types,
+// respectively. If any other error type is unpacked, it will appear in the ExternalErr field.
+type UnpackedError struct {
+	ErrRoot     ErrRoot
+	ErrChain    []ErrLink
+	ExternalErr string
+}
+
+// Unpack returns UnpackedError type for a given golang error type.
+func Unpack(err error) UnpackedError {
+	var upErr UnpackedError
+	for err != nil {
+		switch err := err.(type) {
+		case *rootError:
+			upErr.ErrRoot.Msg = err.msg
+			upErr.ErrRoot.Stack = err.stack.get()
+		case *wrapError:
+			// prepend links in stack trace order
+			link := ErrLink{Msg: err.msg}
+			link.Frame = err.frame.get()
+			upErr.ErrChain = append([]ErrLink{link}, upErr.ErrChain...)
+		default:
+			upErr.ExternalErr = err.Error()
+		}
+		err = Unwrap(err)
+	}
+	return upErr
+}
+
 // Format defines an error output format to be used with the default formatter.
 type Format struct {
 	WithTrace    bool   // Flag that enables stack trace output.
@@ -26,33 +58,6 @@ func NewDefaultFormat(withTrace bool) Format {
 		stringFmt.ErrorSep = "\n"
 	}
 	return stringFmt
-}
-
-// UnpackedError represents complete information about an error.
-//
-// This type can be used for custom error logging and parsing. Use `eris.Unpack` to build an UnpackedError
-// from any error type. The ErrChain and ErrRoot fields correspond to `wrapError` and `rootError` types,
-// respectively. If any other error type is unpacked, it will appear in the ExternalErr field.
-type UnpackedError struct {
-	ErrRoot     ErrRoot
-	ErrChain    []ErrLink
-	ExternalErr string
-}
-
-// Unpack returns UnpackedError type for a given golang error type.
-func Unpack(err error) UnpackedError {
-	upErr := UnpackedError{}
-	switch err := err.(type) {
-	case nil:
-		return upErr
-	case *rootError:
-		upErr.unpackRootErr(err)
-	case *wrapError:
-		upErr.unpackWrapErr(err)
-	default:
-		upErr.ExternalErr = err.Error()
-	}
-	return upErr
 }
 
 // ToCustomString returns a custom formatted string for a given eris error.
@@ -207,32 +212,6 @@ func ToCustomJSON(err error, format Format) map[string]interface{} {
 //   }
 func ToJSON(err error, withTrace bool) map[string]interface{} {
 	return ToCustomJSON(err, NewDefaultFormat(withTrace))
-}
-
-func (upErr *UnpackedError) unpackRootErr(err *rootError) {
-	upErr.ErrRoot.Msg = err.msg
-	upErr.ErrRoot.Stack = err.stack.get()
-}
-
-func (upErr *UnpackedError) unpackWrapErr(err *wrapError) {
-	// prepend links in stack trace order
-	link := ErrLink{Msg: err.msg}
-	wFrames := err.stack.get()
-	if len(wFrames) > 0 {
-		link.Frame = wFrames[0]
-	}
-	upErr.ErrChain = append([]ErrLink{link}, upErr.ErrChain...)
-
-	nextErr := err.Unwrap()
-	switch nextErr := nextErr.(type) {
-	case *rootError:
-		upErr.unpackRootErr(nextErr)
-	case *wrapError:
-		upErr.unpackWrapErr(nextErr)
-	}
-
-	// insert the wrap frame into the root stack
-	upErr.ErrRoot.Stack.insertFrame(wFrames)
 }
 
 // ErrRoot represents an error stack and the accompanying message.
