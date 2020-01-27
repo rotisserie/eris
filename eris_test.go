@@ -11,6 +11,11 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+var (
+	globalErr          = eris.New("global error")
+	formattedGlobalErr = eris.Errorf("%v global error", "formatted")
+)
+
 func setupTestCase(wrapf bool, cause error, input []string) error {
 	err := cause
 	for _, str := range input {
@@ -24,8 +29,6 @@ func setupTestCase(wrapf bool, cause error, input []string) error {
 }
 
 func TestErrorWrapping(t *testing.T) {
-	globalErr := eris.NewGlobal("global error")
-
 	tests := map[string]struct {
 		cause  error    // root error
 		input  []string // input for error wrapping
@@ -35,26 +38,36 @@ func TestErrorWrapping(t *testing.T) {
 			cause: nil,
 			input: []string{"additional context"},
 		},
-		"standard error wrapping with global root cause (eris.NewGlobal)": {
+		"standard error wrapping with a global root cause": {
 			cause:  globalErr,
 			input:  []string{"additional context", "even more context"},
 			output: "global error: additional context: even more context",
 		},
-		"standard error wrapping with internal root cause (eris.New)": {
+		"formatted error wrapping with a global root cause": {
+			cause:  formattedGlobalErr,
+			input:  []string{"additional context", "even more context"},
+			output: "formatted global error: additional context: even more context",
+		},
+		"standard error wrapping with a local root cause": {
 			cause:  eris.New("root error"),
 			input:  []string{"additional context", "even more context"},
 			output: "root error: additional context: even more context",
 		},
-		"standard error wrapping with external root cause (errors.New)": {
+		"standard error wrapping with a local root cause (eris.Errorf)": {
+			cause:  eris.Errorf("%v root error", "formatted"),
+			input:  []string{"additional context", "even more context"},
+			output: "formatted root error: additional context: even more context",
+		},
+		"standard error wrapping with a third-party root cause (errors.New)": {
 			cause:  errors.New("external error"),
 			input:  []string{"additional context", "even more context"},
 			output: "external error: additional context: even more context",
 		},
-		"no error wrapping with internal root cause (eris.Errorf)": {
-			cause:  eris.Errorf("%v", "root error"),
-			output: "root error",
+		"no error wrapping with a local root cause (eris.Errorf)": { // todo: also test globals with Errorf (wrapping included)
+			cause:  eris.Errorf("%v root error", "formatted"),
+			output: "formatted root error",
 		},
-		"no error wrapping with external root cause (errors.New)": {
+		"no error wrapping with a third-party root cause (errors.New)": {
 			cause:  errors.New("external error"),
 			output: "external error",
 		},
@@ -114,8 +127,6 @@ func TestErrorUnwrap(t *testing.T) {
 }
 
 func TestErrorIs(t *testing.T) {
-	globalErr := eris.NewGlobal("global error")
-
 	tests := map[string]struct {
 		cause   error    // root error
 		input   []string // input for error wrapping
@@ -286,7 +297,6 @@ func getFrames(frames []uintptr) []eris.StackFrame {
 }
 
 func TestStackFrames(t *testing.T) {
-	globalErr := eris.NewGlobal("global error")
 	tests := map[string]struct {
 		cause error    // root error
 		input []string // input for error wrapping

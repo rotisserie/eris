@@ -67,12 +67,12 @@ Many of the methods in this package will look familiar if you've used [pkg/error
 
 ### Creating errors
 
-Creating errors is simple via [`eris.New`](https://godoc.org/github.com/rotisserie/eris#New) and [`eris.NewGlobal`](https://godoc.org/github.com/rotisserie/eris#NewGlobal).
+Creating errors is simple via [`eris.New`](https://godoc.org/github.com/rotisserie/eris#New).
 
 ```golang
 var (
   // global error values can be useful when wrapping errors or inspecting error types
-  ErrInternalServer = eris.NewGlobal("error internal server")
+  ErrInternalServer = eris.New("error internal server")
 )
 
 func (req *Request) Validate() error {
@@ -142,7 +142,7 @@ Errors created with this package contain stack traces that are managed automatic
 The `eris` package provides a couple ways to inspect and compare error types. [`eris.Is`](https://godoc.org/github.com/rotisserie/eris#Is) returns true if a particular error appears anywhere in the error chain. Currently, it works simply by comparing error messages with each other. If an error contains a particular message (e.g. `"error not found"`) anywhere in its chain, it's defined to be that error type.
 
 ```golang
-ErrNotFound := eris.NewGlobal("error not found")
+ErrNotFound := eris.New("error not found")
 _, err := db.Get(id)
 // check if the resource was not found
 if eris.Is(err, ErrNotFound) {
@@ -154,7 +154,7 @@ if eris.Is(err, ErrNotFound) {
 [`eris.Cause`](https://godoc.org/github.com/rotisserie/eris#Cause) unwraps an error until it reaches the cause, which is defined as the first (i.e. root) error in the chain.
 
 ```golang
-ErrNotFound := eris.NewGlobal("error not found")
+ErrNotFound := eris.New("error not found")
 _, err := db.Get(id)
 // compare the cause to some sentinel value
 if eris.Cause(err) == ErrNotFound {
