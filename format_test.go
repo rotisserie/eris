@@ -117,13 +117,44 @@ func TestFormatStr(t *testing.T) {
 		},
 		"basic wrapped error": {
 			input:  eris.Wrap(eris.Wrap(eris.New("root error"), "additional context"), "even more context"),
-			output: "root error: additional context: even more context",
+			output: "even more context: additional context: root error",
+		},
+		"external error": {
+			input:  errors.New("external error"),
+			output: "external error",
+		},
+		"empty error": {
+			input:  eris.New(""),
+			output: "",
 		},
 	}
 	for desc, tt := range tests {
 		// without trace
 		t.Run(desc, func(t *testing.T) {
 			if got := eris.ToString(tt.input, false); !reflect.DeepEqual(got, tt.output) {
+				t.Errorf("ToString() got\n'%v'\nwant\n'%v'", got, tt.output)
+			}
+		})
+	}
+}
+
+func TestInvertedFormatStr(t *testing.T) {
+	tests := map[string]struct {
+		input  error
+		output string
+	}{
+		"basic wrapped error": {
+			input:  eris.Wrap(eris.Wrap(eris.New("root error"), "additional context"), "even more context"),
+			output: "root error: additional context: even more context",
+		},
+	}
+	for desc, tt := range tests {
+		// without trace
+		t.Run(desc, func(t *testing.T) {
+			format := eris.NewDefaultStringFormat(eris.FormatOptions{
+				InvertOutput: true,
+			})
+			if got := eris.ToCustomString(tt.input, format); !reflect.DeepEqual(got, tt.output) {
 				t.Errorf("ToString() got\n'%v'\nwant\n'%v'", got, tt.output)
 			}
 		})
@@ -141,7 +172,11 @@ func TestFormatJSON(t *testing.T) {
 		},
 		"basic wrapped error": {
 			input:  eris.Wrap(eris.Wrap(eris.New("root error"), "additional context"), "even more context"),
-			output: `{"root":{"message":"root error"},"wrap":[{"message":"additional context"},{"message":"even more context"}]}`,
+			output: `{"root":{"message":"root error"},"wrap":[{"message":"even more context"},{"message":"additional context"}]}`,
+		},
+		"external error": {
+			input:  errors.New("external error"),
+			output: `{"external":"external error"}`,
 		},
 	}
 	for desc, tt := range tests {
@@ -149,6 +184,92 @@ func TestFormatJSON(t *testing.T) {
 			result, _ := json.Marshal(eris.ToJSON(tt.input, false))
 			if got := string(result); !reflect.DeepEqual(got, tt.output) {
 				t.Errorf("ToJSON() = %v, want %v", got, tt.output)
+			}
+		})
+	}
+}
+
+func TestInvertedFormatJSON(t *testing.T) {
+	tests := map[string]struct {
+		input  error
+		output string
+	}{
+		"basic wrapped error": {
+			input:  eris.Wrap(eris.Wrap(eris.New("root error"), "additional context"), "even more context"),
+			output: `{"root":{"message":"root error"},"wrap":[{"message":"additional context"},{"message":"even more context"}]}`,
+		},
+	}
+	for desc, tt := range tests {
+		t.Run(desc, func(t *testing.T) {
+			format := eris.NewDefaultJSONFormat(eris.FormatOptions{
+				InvertOutput: true,
+			})
+			result, _ := json.Marshal(eris.ToCustomJSON(tt.input, format))
+			if got := string(result); !reflect.DeepEqual(got, tt.output) {
+				t.Errorf("ToJSON() = %v, want %v", got, tt.output)
+			}
+		})
+	}
+}
+
+func TestFormatJSONWithStack(t *testing.T) {
+	tests := map[string]struct {
+		input      error
+		rootOutput map[string]interface{}
+		wrapOutput []map[string]interface{}
+	}{
+		"basic wrapped error": {
+			input: eris.Wrap(eris.Wrap(eris.New("root error"), "additional context"), "even more context"),
+			rootOutput: map[string]interface{}{
+				"message": "root error",
+			},
+			wrapOutput: []map[string]interface{}{
+				{"message": "even more context"},
+				{"message": "additional context"},
+			},
+		},
+	}
+	for desc, tt := range tests {
+		t.Run(desc, func(t *testing.T) {
+			format := eris.NewDefaultJSONFormat(eris.FormatOptions{
+				WithTrace:   true,
+				InvertTrace: true,
+			})
+			errJSON := eris.ToCustomJSON(tt.input, format)
+
+			// make sure messages are correct and stack elements exist (actual stack validation is in stack_test.go)
+			if rootMap, ok := errJSON["root"].(map[string]interface{}); ok {
+				if _, exists := rootMap["message"]; !exists {
+					t.Fatalf("%v: expected a 'message' field in the output but didn't find one { %v }", desc, errJSON)
+				}
+				if rootMap["message"] != tt.rootOutput["message"] {
+					t.Errorf("%v: expected { %v } got { %v }", desc, rootMap["message"], tt.rootOutput["message"])
+				}
+				if _, exists := rootMap["stack"]; !exists {
+					t.Fatalf("%v: expected a 'stack' field in the output but didn't find one { %v }", desc, errJSON)
+				}
+			} else {
+				t.Errorf("%v: expected root error is malformed { %v }", desc, errJSON)
+			}
+
+			// make sure messages are correct and stack elements exist (actual stack validation is in stack_test.go)
+			if wrapMap, ok := errJSON["wrap"].([]map[string]interface{}); ok {
+				if len(tt.wrapOutput) != len(wrapMap) {
+					t.Fatalf("%v: expected number of wrap layers { %v } doesn't match actual { %v }", desc, len(tt.wrapOutput), len(wrapMap))
+				}
+				for i := 0; i < len(wrapMap); i++ {
+					if _, exists := wrapMap[i]["message"]; !exists {
+						t.Fatalf("%v: expected a 'message' field in the output but didn't find one { %v }", desc, errJSON)
+					}
+					if wrapMap[i]["message"] != tt.wrapOutput[i]["message"] {
+						t.Errorf("%v: expected { %v } got { %v }", desc, wrapMap[i]["message"], tt.wrapOutput[i]["message"])
+					}
+					if _, exists := wrapMap[i]["stack"]; !exists {
+						t.Fatalf("%v: expected a 'stack' field in the output but didn't find one { %v }", desc, errJSON)
+					}
+				}
+			} else {
+				t.Errorf("%v: expected wrap error is malformed { %v }", desc, errJSON)
 			}
 		})
 	}

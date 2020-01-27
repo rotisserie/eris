@@ -70,9 +70,9 @@ func ExampleToJSON_global() {
 	//   "root": {
 	//     "message": "unexpected EOF",
 	//     "stack": [
-	//       "main.readFile:.../example/main.go:6",
-	//       "main.parseFile:.../example/main.go:12",
 	//       "main.main:.../example/main.go:20",
+	//       "main.parseFile:.../example/main.go:12",
+	//       "main.readFile:.../example/main.go:6"
 	//     ]
 	//   },
 	//   "wrap": [
@@ -140,23 +140,23 @@ func ExampleToJSON_local() {
 	//   "root": {
 	//     "message": "unexpected EOF",
 	//     "stack": [
-	//       "main.readFile:.../example/main.go:3",
-	//       "main.parseFile:.../example/main.go:9",
-	//       "main.parseFile:.../example/main.go:11",
-	//       "main.processFile:.../example/main.go:19",
-	//       "main.printFile:.../example/main.go:29",
-	//       "main.printFile:.../example/main.go:31",
 	//       "main.main:.../example/main.go:37",
+	//       "main.printFile:.../example/main.go:31",
+	//       "main.printFile:.../example/main.go:29",
+	//       "main.processFile:.../example/main.go:19",
+	//       "main.parseFile:.../example/main.go:11",
+	//       "main.parseFile:.../example/main.go:9",
+	//       "main.readFile:.../example/main.go:3"
 	//     ]
 	//   },
 	//   "wrap": [
 	//     {
-	//       "message": "error reading file 'example.json'",
-	//       "stack": "main.parseFile: .../example/main.go: 11"
-	//     },
-	//     {
 	//       "message": "error printing file 'example.json'",
 	//       "stack": "main.printFile:.../example/main.go:31"
+	//     },
+	//     {
+	//       "message": "error reading file 'example.json'",
+	//       "stack": "main.parseFile: .../example/main.go: 11"
 	//     }
 	//   ]
 	// }
@@ -210,8 +210,18 @@ func ExampleToString_global() {
 		return nil
 	}
 
-	// call parseFile and catch the error
-	err := parseFile("example.json") // line 20
+	// example func that just catches and returns an error
+	processFile := func(fname string) error {
+		// parse the file
+		err := parseFile(fname) // line 22
+		if err != nil {
+			return eris.Wrapf(err, "error processing file '%v'", fname) // line 24
+		}
+		return nil
+	}
+
+	// call processFile and catch the error
+	err := processFile("example.json") // line 30
 
 	// print the error via fmt.Printf
 	fmt.Printf("%v\n", err) // %v: omit stack trace
@@ -223,11 +233,13 @@ func ExampleToString_global() {
 	fmt.Printf("%v\n", eris.ToString(err, true)) // true: include stack trace
 
 	// example output:
-	// unexpected EOF
-	//   main.readFile:.../example/main.go:6
-	//   main.parseFile:.../example/main.go:12
-	//   main.main:.../example/main.go:20
 	// error reading file 'example.json'
+	//   main.readFile:.../example/main.go:6
+	// unexpected EOF
+	//   main.main:.../example/main.go:30
+	//   main.processFile:.../example/main.go:24
+	//   main.processFile:.../example/main.go:22
+	//   main.parseFile:.../example/main.go:12
 	//   main.readFile:.../example/main.go:6
 }
 
@@ -270,13 +282,13 @@ func ExampleToString_local() {
 	fmt.Println(eris.ToString(err, true)) // true: include stack trace
 
 	// example output:
-	// unexpected EOF
-	//   main.readFile:.../example/main.go:3
-	//   main.parseFile:.../example/main.go:9
-	//   main.parseFile:.../example/main.go:11
-	//   main.main:.../example/main.go:17
 	// error reading file 'example.json'
 	//   main.parseFile:.../example/main.go:11
+	// unexpected EOF
+	//   main.main:.../example/main.go:17
+	//   main.parseFile:.../example/main.go:11
+	//   main.parseFile:.../example/main.go:9
+	//   main.readFile:.../example/main.go:3
 }
 
 func TestExampleToString_local(t *testing.T) {

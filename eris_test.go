@@ -41,27 +41,27 @@ func TestErrorWrapping(t *testing.T) {
 		"standard error wrapping with a global root cause": {
 			cause:  globalErr,
 			input:  []string{"additional context", "even more context"},
-			output: "global error: additional context: even more context",
+			output: "even more context: additional context: global error",
 		},
 		"formatted error wrapping with a global root cause": {
 			cause:  formattedGlobalErr,
 			input:  []string{"additional context", "even more context"},
-			output: "formatted global error: additional context: even more context",
+			output: "even more context: additional context: formatted global error",
 		},
 		"standard error wrapping with a local root cause": {
 			cause:  eris.New("root error"),
 			input:  []string{"additional context", "even more context"},
-			output: "root error: additional context: even more context",
+			output: "even more context: additional context: root error",
 		},
 		"standard error wrapping with a local root cause (eris.Errorf)": {
 			cause:  eris.Errorf("%v root error", "formatted"),
 			input:  []string{"additional context", "even more context"},
-			output: "formatted root error: additional context: even more context",
+			output: "even more context: additional context: formatted root error",
 		},
 		"standard error wrapping with a third-party root cause (errors.New)": {
 			cause:  errors.New("external error"),
 			input:  []string{"additional context", "even more context"},
-			output: "external error: additional context: even more context",
+			output: "even more context: additional context: external error",
 		},
 		"no error wrapping with a local root cause (eris.Errorf)": {
 			cause:  eris.Errorf("%v root error", "formatted"),
@@ -95,8 +95,8 @@ func TestErrorUnwrap(t *testing.T) {
 			cause: eris.New("root error"),
 			input: []string{"additional context", "even more context"},
 			output: []string{
-				"root error: additional context: even more context",
-				"root error: additional context",
+				"even more context: additional context: root error",
+				"additional context: root error",
 				"root error",
 			},
 		},
@@ -104,8 +104,8 @@ func TestErrorUnwrap(t *testing.T) {
 			cause: errors.New("external error"),
 			input: []string{"additional context", "even more context"},
 			output: []string{
-				"external error: additional context: even more context",
-				"external error: additional context",
+				"even more context: additional context: external error",
+				"additional context: external error",
 				"external error",
 			},
 		},
@@ -242,12 +242,12 @@ func TestErrorFormatting(t *testing.T) {
 		"standard error wrapping with internal root cause (eris.New)": {
 			cause:  eris.New("root error"),
 			input:  []string{"additional context", "even more context"},
-			output: "root error: additional context: even more context",
+			output: "even more context: additional context: root error",
 		},
 		"standard error wrapping with external root cause (errors.New)": {
 			cause:  errors.New("external error"),
 			input:  []string{"additional context", "even more context"},
-			output: "external error: additional context: even more context",
+			output: "even more context: additional context: external error",
 		},
 	}
 
