@@ -1,4 +1,12 @@
 
+<a name="v0.2.1"></a>
+## [v0.2.1](https://github.com/rotisserie/eris/compare/v0.2.0...v0.2.1) (2020-01-28)
+
+### Code Refactoring
+
+* check for global stack traces instead of forcing NewGlobal ([#71](https://github.com/rotisserie/eris/issues/71))
+
+
 <a name="v0.2.0"></a>
 ## [v0.2.0](https://github.com/rotisserie/eris/compare/v0.1.1...v0.2.0) (2020-01-17)
 
