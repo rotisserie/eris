@@ -9,6 +9,11 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+var (
+	ErrUnexpectedEOF          = eris.New("unexpected EOF")
+	FormattedErrUnexpectedEOF = eris.Errorf("unexpected %v", "EOF")
+)
+
 // Demonstrates JSON formatting of wrapped errors that originate from external (non-eris) error
 // types. You can try this example in the Go playground (https://play.golang.org/p/29yCByzK8wT).
 func ExampleToJSON_external() {
@@ -37,13 +42,9 @@ func TestExampleToJSON_external(t *testing.T) {
 	ExampleToJSON_external()
 }
 
-// Demonstrates JSON formatting of wrapped errors that originate from global root errors (created
-// via eris.NewGlobal). You can try this example in the Go playground
-// (https://play.golang.org/p/jkZHLfHsYHV).
+// Demonstrates JSON formatting of wrapped errors that originate from global root errors. You can
+// try this example in the Go playground (https://play.golang.org/p/jkZHLfHsYHV).
 func ExampleToJSON_global() {
-	// declare a "global" error type
-	ErrUnexpectedEOF := eris.NewGlobal("unexpected EOF")
-
 	// example func that wraps a global error value
 	readFile := func(fname string) error {
 		return eris.Wrapf(ErrUnexpectedEOF, "error reading file '%v'", fname) // line 6
@@ -191,16 +192,12 @@ func TestExampleToString_external(t *testing.T) {
 	ExampleToString_external()
 }
 
-// Demonstrates string formatting of wrapped errors that originate from global root errors (created
-// via eris.NewGlobal). You can try this example in the Go playground
-// (https://play.golang.org/p/8YgyDwk9xBJ).
+// Demonstrates string formatting of wrapped errors that originate from global root errors. You can
+// try this example in the Go playground (https://play.golang.org/p/8YgyDwk9xBJ).
 func ExampleToString_global() {
-	// declare a "global" error type
-	ErrUnexpectedEOF := eris.NewGlobal("unexpected EOF")
-
 	// example func that wraps a global error value
 	readFile := func(fname string) error {
-		return eris.Wrapf(ErrUnexpectedEOF, "error reading file '%v'", fname) // line 6
+		return eris.Wrapf(FormattedErrUnexpectedEOF, "error reading file '%v'", fname) // line 6
 	}
 
 	// example func that catches and returns an error without modification

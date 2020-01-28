@@ -127,6 +127,17 @@ func (s *stack) get() []StackFrame {
 	return sFrames
 }
 
+// isGlobal determines if the stack trace represents a global error
+func (s *stack) isGlobal() bool {
+	frames := s.get()
+	for _, f := range frames {
+		if strings.ToLower(f.Name) == "runtime.doinit" {
+			return true
+		}
+	}
+	return false
+}
+
 func insert(s Stack, f StackFrame, at int) Stack {
 	// this inserts the frame by breaking the stack into two slices (s[:at] and s[at:])
 	return append(s[:at], append([]StackFrame{f}, s[at:]...)...)

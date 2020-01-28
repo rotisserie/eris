@@ -8,26 +8,21 @@ import (
 
 // New creates a new root error with a static message.
 func New(msg string) error {
+	stack := callers(3) // callers(3) skips this method, stack.callers, and runtime.Callers
 	return &rootError{
-		msg:   msg,
-		stack: callers(3), // callers(3) skips this method, stack.callers, and runtime.Callers
-	}
-}
-
-// NewGlobal creates a new root error for use as a global sentinel type.
-func NewGlobal(msg string) error {
-	return &rootError{
-		global: true,
+		global: stack.isGlobal(),
 		msg:    msg,
-		stack:  callers(3),
+		stack:  stack,
 	}
 }
 
 // Errorf creates a new root error with a formatted message.
 func Errorf(format string, args ...interface{}) error {
+	stack := callers(3)
 	return &rootError{
-		msg:   fmt.Sprintf(format, args...),
-		stack: callers(3),
+		global: stack.isGlobal(),
+		msg:    fmt.Sprintf(format, args...),
+		stack:  stack,
 	}
 }
 
