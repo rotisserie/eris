@@ -64,7 +64,7 @@ release-tag: build fmt lint test
 	@echo Generating changelog
 	@git-chglog -o CHANGELOG.md
 	@git add CHANGELOG.md
-	@git commit -m "chore: update changelog for version '${VERSION}'"
+	@git commit -m "chore: update changelog for version '${VERSION}'" -S
 
 ## Push a release (warning: make sure the release was staged properly before doing this)
 release-push:

@@ -9,25 +9,6 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func errChainsEqual(a []eris.ErrLink, b []eris.ErrLink) bool {
-	// If one is nil, the other must also be nil.
-	if (a == nil) != (b == nil) {
-		return false
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i].Msg != b[i].Msg {
-			return false
-		}
-	}
-
-	return true
-}
-
 func TestUnpack(t *testing.T) {
 	tests := map[string]struct {
 		cause  error
@@ -104,6 +85,25 @@ func TestUnpack(t *testing.T) {
 			}
 		})
 	}
+}
+
+func errChainsEqual(a []eris.ErrLink, b []eris.ErrLink) bool {
+	// If one is nil, the other must also be nil.
+	if (a == nil) != (b == nil) {
+		return false
+	}
+
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i].Msg != b[i].Msg {
+			return false
+		}
+	}
+
+	return true
 }
 
 func TestFormatStr(t *testing.T) {
