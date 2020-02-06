@@ -29,7 +29,7 @@ Package `eris` provides a better way to handle, trace, and log errors in Go.
 
 Named after the Greek goddess of strife and discord, this package is designed to give you more control over error handling via error wrapping, stack tracing, and output formatting. `eris` was inspired by a simple question: what if you could fix a bug without wasting time replicating the issue or digging through the code?
 
-`eris` is intended to help developers diagnose issues faster. The [example](https://github.com/rotisserie/examples/blob/master/eris/logging/example.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the source to the top of the call stack.
+`eris` is intended to help developers diagnose issues faster. The [example](https://github.com/rotisserie/eris/blob/master/examples/logging/example.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the source to the top of the call stack.
 
 ```json
 {
@@ -37,20 +37,20 @@ Named after the Greek goddess of strife and discord, this package is designed to
     "root":{
       "message":"error internal server",
       "stack":[
-        "main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:61",
-        "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:82",
-        "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:85",
-        "main.main:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:143"
+        "main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:61",
+        "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:82",
+        "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:85",
+        "main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143"
       ]
     },
     "wrap":[
       {
         "message":"Rel: can't make ./some/malformed/absolute/path/data.json relative to /Users/roti/",
-        "stack":"main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:61"
+        "stack":"main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:61"
       },
       {
         "message":"failed to get relative path for resource 'res2'",
-        "stack":"main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:85"
+        "stack":"main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:85"
       }
     ]
   },
@@ -122,16 +122,16 @@ Errors created with this package contain stack traces that are managed automatic
   "root":{
     "message":"error bad request", // root cause
     "stack":[
-      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:28", // location of the root
-      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:29", // location of Wrap call
-      "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:71",
-      "main.main:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:143"
+      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:28", // location of the root
+      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:29", // location of Wrap call
+      "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:71",
+      "main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143"
     ]
   },
   "wrap":[
     {
       "message":"received a request with no ID", // additional context
-      "stack":"main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:29" // location of Wrap call
+      "stack":"main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:29" // location of Wrap call
     }
   ]
 }
@@ -200,7 +200,7 @@ sentry.CaptureMessage(uErr.ErrRoot.Msg)
 
 ### Sending error traces to Sentry
 
-`eris` supports sending your error traces to [Sentry](https://sentry.io/) using the Sentry Go [client SDK](https://github.com/getsentry/sentry-go). You can run the example that generated the following output on Sentry UI using the command `go run eris/sentry/example.go -dsn=<DSN>` in our [examples](https://github.com/rotisserie/examples) repository.
+`eris` supports sending your error traces to [Sentry](https://sentry.io/) using the Sentry Go [client SDK](https://github.com/getsentry/sentry-go). You can run the example that generated the following output on Sentry UI using the command `go run examples/sentry/example.go -dsn=<DSN>`.
 
 ```
 *eris.wrapError: test: wrap 1: wrap 2: wrap 3
@@ -228,11 +228,11 @@ Readability is a major design requirement for `eris`. In addition to the JSON ou
 
 ```
 error not found
-  main.GetResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:52
-  main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:76
-  main.main:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:143
+  main.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:52
+  main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:76
+  main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143
 failed to get resource 'res1'
-  main.GetResource:/Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:52
+  main.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:52
 ```
 
 The `eris` error stack is designed to be easier to interpret than other error handling packages, and it achieves this by omitting extraneous information and avoiding unnecessary repetition. The stack trace above omits calls from Go's `runtime` package and includes just a single frame for wrapped layers which are inserted into the root error stack trace in the correct order. `eris` also correctly handles and updates stack traces for global error values.
@@ -242,7 +242,7 @@ The output of `pkg/errors` for the same error is shown below. In this case, the 
 ```
 error not found
 main.init
-  /Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:18
+  /Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:18
 runtime.doInit
   /usr/local/Cellar/go/1.13.6/libexec/src/runtime/proc.go:5222
 runtime.main
@@ -251,11 +251,11 @@ runtime.goexit
   /usr/local/Cellar/go/1.13.6/libexec/src/runtime/asm_amd64.s:1357
 failed to get resource 'res1'
 main.GetResource
-  /Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:52
+  /Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:52
 main.ProcessResource
-  /Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:76
+  /Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:76
 main.main
-  /Users/roti/go/src/github.com/rotisserie/examples/eris/logging/example.go:143
+  /Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143
 runtime.main
   /usr/local/Cellar/go/1.13.6/libexec/src/runtime/proc.go:203
 runtime.goexit
