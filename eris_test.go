@@ -63,7 +63,7 @@ func TestErrorWrapping(t *testing.T) {
 			input:  []string{"additional context", "even more context"},
 			output: "external error: additional context: even more context",
 		},
-		"no error wrapping with a local root cause (eris.Errorf)": { // todo: also test globals with Errorf (wrapping included)
+		"no error wrapping with a local root cause (eris.Errorf)": {
 			cause:  eris.Errorf("%v root error", "formatted"),
 			output: "formatted root error",
 		},
@@ -260,7 +260,6 @@ func TestErrorFormatting(t *testing.T) {
 				t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, err)
 			}
 
-			// todo: automate stack trace verification
 			_ = fmt.Sprintf("error formatting results (%v):\n", desc)
 			_ = fmt.Sprintf("%v\n", err)
 			_ = fmt.Sprintf("%+v", err)
@@ -268,32 +267,28 @@ func TestErrorFormatting(t *testing.T) {
 	}
 }
 
-func getFrames(frames []uintptr) []eris.StackFrame {
-	var sFrames []eris.StackFrame
-	for _, u := range frames {
-		pc := u - 1
-		fn := runtime.FuncForPC(pc)
-		if fn == nil {
-			frame := eris.StackFrame{
-				Name: "unknown",
-				File: "unknown",
-			}
-			sFrames = append(sFrames, frame)
-		}
-
-		name := fn.Name()
-		i := strings.LastIndex(name, "/")
-		name = name[i+1:]
-		file, line := fn.FileLine(pc)
-
-		frame := eris.StackFrame{
-			Name: name,
-			File: file,
-			Line: line,
-		}
-		sFrames = append(sFrames, frame)
+func getFrames(pc []uintptr) []eris.StackFrame {
+	var stackFrames []eris.StackFrame
+	if len(pc) == 0 {
+		return stackFrames
 	}
-	return sFrames
+
+	frames := runtime.CallersFrames(pc)
+	for {
+		frame, more := frames.Next()
+		i := strings.LastIndex(frame.Function, "/")
+		name := frame.Function[i+1:]
+		stackFrames = append(stackFrames, eris.StackFrame{
+			Name: name,
+			File: frame.File,
+			Line: frame.Line,
+		})
+		if !more {
+			break
+		}
+	}
+
+	return stackFrames
 }
 
 func TestStackFrames(t *testing.T) {
@@ -326,13 +321,14 @@ func TestStackFrames(t *testing.T) {
 			cause: nil,
 		},
 	}
+
 	for desc, tc := range tests {
 		t.Run(desc, func(t *testing.T) {
 			err := setupTestCase(false, tc.cause, tc.input)
 			uErr := eris.Unpack(err)
 			sFrames := eris.Stack(getFrames(eris.StackFrames(err)))
 			if !reflect.DeepEqual(uErr.ErrRoot.Stack, sFrames) {
-				t.Errorf("Stackframes() returned { %v }, was expecting { %v }", sFrames, uErr.ErrRoot.Stack)
+				t.Errorf("%v: expected { %v } got { %v }", desc, sFrames, uErr.ErrRoot.Stack)
 			}
 		})
 	}

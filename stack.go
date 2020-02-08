@@ -65,37 +65,27 @@ type frame uintptr
 
 // get returns a human readable stack frame.
 func (f frame) get() StackFrame {
-	frame := StackFrame{
-		Name: "unknown",
-		File: "unknown",
-	}
-
 	pc := uintptr(f) - 1
-	fn := runtime.FuncForPC(pc)
-	if fn != nil {
-		name := fn.Name()
-		i := strings.LastIndex(name, "/")
-		name = name[i+1:]
-		file, line := fn.FileLine(pc)
+	frames := runtime.CallersFrames([]uintptr{pc})
+	frame, _ := frames.Next()
 
-		frame = StackFrame{
-			Name: name,
-			File: file,
-			Line: line,
-		}
+	i := strings.LastIndex(frame.Function, "/")
+	name := frame.Function[i+1:]
+
+	return StackFrame{
+		Name: name,
+		File: frame.File,
+		Line: frame.Line,
 	}
-
-	return frame
 }
 
-// callers returns a stack trace. the argument skip is the number of stack frames to skip
-// before recording in pc, with 0 identifying the frame for Callers itself and 1 identifying
-// the caller of Callers.
+// callers returns a stack trace. the argument skip is the number of stack frames to skip before recording
+// in pc, with 0 identifying the frame for Callers itself and 1 identifying the caller of Callers.
 func callers(skip int) *stack {
 	const depth = 64
 	var pcs [depth]uintptr
 	n := runtime.Callers(skip, pcs[:])
-	var st stack = pcs[0 : n-2]
+	var st stack = pcs[0 : n-2] // todo: change this to filtering out runtime instead of hardcoding n-2
 	return &st
 }
 
@@ -104,13 +94,24 @@ type stack []uintptr
 
 // get returns a human readable stack trace.
 func (s *stack) get() []StackFrame {
-	var sFrames []StackFrame
-	for _, f := range *s {
-		frame := frame(f)
-		sFrame := frame.get()
-		sFrames = append(sFrames, sFrame)
+	var stackFrames []StackFrame
+
+	frames := runtime.CallersFrames(*s)
+	for {
+		frame, more := frames.Next()
+		i := strings.LastIndex(frame.Function, "/")
+		name := frame.Function[i+1:]
+		stackFrames = append(stackFrames, StackFrame{
+			Name: name,
+			File: frame.File,
+			Line: frame.Line,
+		})
+		if !more {
+			break
+		}
 	}
-	return sFrames
+
+	return stackFrames
 }
 
 // isGlobal determines if the stack trace represents a global error
