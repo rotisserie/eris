@@ -9,33 +9,15 @@ import (
 // Stack is an array of stack frames stored in a human readable format.
 type Stack []StackFrame
 
-// insertPC inserts a wrap error program counter (pc) into the correct place of the root error stack trace.
-// TODO: this function can be optimized
-func (rootPCs *stack) insertPC(wrapPCs stack) {
-	if rootPCs == nil || len(wrapPCs) == 0 {
-		return
-	} else if len(wrapPCs) == 1 {
-		// append the pc to the end if there's only one
-		*rootPCs = append(*rootPCs, wrapPCs[0])
-		return
-	}
-	for at, f := range *rootPCs {
-		if f == wrapPCs[0] {
-			// break if the stack already contains the pc
-			break
-		} else if f == wrapPCs[1] {
-			// insert the first pc into the stack if the second pc is found
-			*rootPCs = insert(*rootPCs, wrapPCs[0], at)
-			break
-		}
-	}
-}
-
 // format returns an array of formatted stack frames.
-func (s Stack) format(sep string) []string {
+func (s Stack) format(sep string, invert bool) []string {
 	var str []string
 	for _, f := range s {
-		str = append(str, f.format(sep))
+		if invert {
+			str = append(str, f.format(sep))
+		} else {
+			str = append([]string{f.format(sep)}, str...)
+		}
 	}
 	return str
 }
@@ -91,6 +73,27 @@ func callers(skip int) *stack {
 
 // stack is an array of program counters.
 type stack []uintptr
+
+// insertPC inserts a wrap error program counter (pc) into the correct place of the root error stack trace.
+func (s *stack) insertPC(wrapPCs stack) {
+	if s == nil || len(wrapPCs) == 0 {
+		return
+	} else if len(wrapPCs) == 1 {
+		// append the pc to the end if there's only one
+		*s = append(*s, wrapPCs[0])
+		return
+	}
+	for at, f := range *s {
+		if f == wrapPCs[0] {
+			// break if the stack already contains the pc
+			break
+		} else if f == wrapPCs[1] {
+			// insert the first pc into the stack if the second pc is found
+			*s = insert(*s, wrapPCs[0], at)
+			break
+		}
+	}
+}
 
 // get returns a human readable stack trace.
 func (s *stack) get() []StackFrame {

@@ -14,6 +14,7 @@ Package `eris` provides a better way to handle, trace, and log errors in Go.
   * [Wrapping errors](#wrapping-errors)
   * [Formatting and logging errors](#formatting-and-logging-errors)
   * [Interpreting eris stack traces](#interpreting-eris-stack-traces)
+  * [Inverting the stack trace and error output](#inverting-the-stack-trace-and-error-output)
   * [Inspecting errors](#inspecting-errors)
   * [Formatting with custom separators](#formatting-with-custom-separators)
   * [Writing a custom output format](#writing-a-custom-output-format)
@@ -29,7 +30,7 @@ Package `eris` provides a better way to handle, trace, and log errors in Go.
 
 Named after the Greek goddess of strife and discord, this package is designed to give you more control over error handling via error wrapping, stack tracing, and output formatting. `eris` was inspired by a simple question: what if you could fix a bug without wasting time replicating the issue or digging through the code?
 
-`eris` is intended to help developers diagnose issues faster. The [example](https://github.com/rotisserie/eris/blob/master/examples/logging/example.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the source to the top of the call stack.
+`eris` is intended to help developers diagnose issues faster. The [example](https://github.com/rotisserie/eris/blob/master/examples/logging/example.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the top of the call stack to the source.
 
 ```json
 {
@@ -37,20 +38,20 @@ Named after the Greek goddess of strife and discord, this package is designed to
     "root":{
       "message":"error internal server",
       "stack":[
-        "main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:61",
-        "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:82",
+        "main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143",
         "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:85",
-        "main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143"
+        "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:82",
+        "main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:61"
       ]
     },
     "wrap":[
       {
-        "message":"Rel: can't make ./some/malformed/absolute/path/data.json relative to /Users/roti/",
-        "stack":"main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:61"
-      },
-      {
         "message":"failed to get relative path for resource 'res2'",
         "stack":"main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:85"
+      },
+      {
+        "message":"Rel: can't make ./some/malformed/absolute/path/data.json relative to /Users/roti/",
+        "stack":"main.GetRelPath:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:61"
       }
     ]
   },
@@ -115,17 +116,17 @@ fmt.Println(formattedStr)
 
 ### Interpreting eris stack traces
 
-Errors created with this package contain stack traces that are managed automatically. They're currently mandatory when creating and wrapping errors but optional when printing or logging. The stack trace and all wrapped layers follow the same order as Go's `runtime` package, which means that the root cause of the error is shown first.
+Errors created with this package contain stack traces that are managed automatically. They're currently mandatory when creating and wrapping errors but optional when printing or logging. By default, the stack trace and all wrapped layers follow the opposite order of Go's `runtime` package, which means that the original calling method is shown first and the root cause of the error is shown last.
 
 ```golang
 {
   "root":{
     "message":"error bad request", // root cause
     "stack":[
-      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:28", // location of the root
-      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:29", // location of Wrap call
+      "main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143", // original calling method
       "main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:71",
-      "main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143"
+      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:29", // location of Wrap call
+      "main.(*Request).Validate:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:28" // location of the root
     ]
   },
   "wrap":[
@@ -135,6 +136,31 @@ Errors created with this package contain stack traces that are managed automatic
     }
   ]
 }
+```
+
+### Inverting the stack trace and error output
+
+If you prefer some other order than the default, `eris` supports inverting both the stack trace and the entire error output. When both are inverted, the root error is shown first and the original calling method is shown last.
+
+```golang
+// create a default format with error and stack inversion options
+format := eris.NewDefaultStringFormat(eris.FormatOptions{
+  InvertOutput: true, // flag that inverts the error output (wrap errors shown first)
+  WithTrace: true,    // flag that enables stack trace output
+  InvertTrace: true,  // flag that inverts the stack trace output (top of call stack shown first)
+})
+
+// format the error to a string and print it
+formattedStr := eris.ToCustomString(err, format)
+fmt.Println(formattedStr)
+
+// example output:
+// error not found
+//   main.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:52
+//   main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:76
+//   main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143
+// failed to get resource 'res1'
+//   main.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:52
 ```
 
 ### Inspecting errors
@@ -165,12 +191,14 @@ if eris.Cause(err) == ErrNotFound {
 
 ### Formatting with custom separators
 
-For users who need more control over the error output, `eris` allows for some control over the separators between each piece of the output via the [`eris.Format`](https://godoc.org/github.com/rotisserie/eris#Format) type. Currently, the default order of the error and stack trace output is rigid. If this isn't flexible enough for your needs, see the [custom output format](#writing-a-custom-output-format) section below. To format errors with custom separators, you can define and pass a format object to [`eris.ToCustomString`](https://godoc.org/github.com/rotisserie/eris#ToCustomString) or [`eris.ToCustomJSON`](https://godoc.org/github.com/rotisserie/eris#ToCustomJSON).
+For users who need more control over the error output, `eris` allows for some control over the separators between each piece of the output via the [`eris.Format`](https://godoc.org/github.com/rotisserie/eris#Format) type. If this isn't flexible enough for your needs, see the [custom output format](#writing-a-custom-output-format) section below. To format errors with custom separators, you can define and pass a format object to [`eris.ToCustomString`](https://godoc.org/github.com/rotisserie/eris#ToCustomString) or [`eris.ToCustomJSON`](https://godoc.org/github.com/rotisserie/eris#ToCustomJSON).
 
 ```golang
 // format the error to a string with custom separators
 formattedStr := eris.ToCustomString(err, Format{
-  WithTrace: true,     // flag that enables stack trace output
+  FormatOptions: eris.FormatOptions{
+    WithTrace: true,   // flag that enables stack trace output
+  },
   MsgStackSep: "\n",   // separator between error messages and stack frame data
   PreStackSep: "\t",   // separator at the beginning of each stack frame
   StackElemSep: " | ", // separator between elements of each stack frame
@@ -179,11 +207,11 @@ formattedStr := eris.ToCustomString(err, Format{
 fmt.Println(formattedStr)
 
 // example output:
-// unexpected EOF
-//   main.readFile | .../example/main.go | 6
-//   main.parseFile | .../example/main.go | 12
-//   main.main | .../example/main.go | 20
 // error reading file 'example.json'
+//   main.readFile | .../example/main.go | 6
+// unexpected EOF
+//   main.main | .../example/main.go | 20
+//   main.parseFile | .../example/main.go | 12
 //   main.readFile | .../example/main.go | 6
 ```
 
@@ -227,15 +255,15 @@ sentry.CaptureMessage(uErr.ErrRoot.Msg)
 Readability is a major design requirement for `eris`. In addition to the JSON output shown above, `eris` also supports formatting errors to a simple string.
 
 ```
-error not found
-  main.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:52
-  main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:76
-  main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143
 failed to get resource 'res1'
+  main.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:52
+error not found
+  main.main:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:143
+  main.ProcessResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:76
   main.GetResource:/Users/roti/go/src/github.com/rotisserie/eris/examples/logging/example.go:52
 ```
 
-The `eris` error stack is designed to be easier to interpret than other error handling packages, and it achieves this by omitting extraneous information and avoiding unnecessary repetition. The stack trace above omits calls from Go's `runtime` package and includes just a single frame for wrapped layers which are inserted into the root error stack trace in the correct order. `eris` also correctly handles and updates stack traces for global error values.
+The `eris` error stack is designed to be easier to interpret than other error handling packages, and it achieves this by omitting extraneous information and avoiding unnecessary repetition. The stack trace above omits calls from Go's `runtime` package and includes just a single frame for wrapped layers which are inserted into the root error stack trace in the correct order. `eris` also correctly handles and updates stack traces for global error values in a transparent way.
 
 The output of `pkg/errors` for the same error is shown below. In this case, the root error stack trace is incorrect because it was declared as a global value, and it includes several extraneous lines from the `runtime` package. The output is also much more difficult to read and does not allow for custom formatting.
 

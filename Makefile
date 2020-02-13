@@ -42,6 +42,12 @@ lint:
 	@echo Linting
 	@golangci-lint run --no-config --issues-exit-code=0 --timeout=5m
 
+## Format docs
+docs:
+	@echo Formatting docs
+	@npm list -g markdown-toc > /dev/null 2>&1 || npm install -g markdown-toc > /dev/null 2>&1
+	@markdown-toc -i README.md
+
 ## Run the tests
 test:
 	@echo Running tests
