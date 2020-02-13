@@ -12,17 +12,17 @@ import (
 
 var (
 	// global error values can be useful when wrapping errors or inspecting error types
-	ErrInternalServer = eris.New("error internal server")
+	errInternalServer = eris.New("error internal server")
 
 	// declaring an error with pkg/errors for comparison
-	ErrNotFound = errors.New("error not found")
+	errNotFound = errors.New("error not found")
 )
 
-type Request struct {
+type request struct {
 	ID string
 }
 
-func (req *Request) Validate() error {
+func (req *request) validate() error {
 	if req.ID == "" {
 		// create a new local error and wrap it with some context
 		err := eris.New("error bad request")
@@ -31,73 +31,73 @@ func (req *Request) Validate() error {
 	return nil
 }
 
-type Resource struct {
+type resource struct {
 	ID      string
 	AbsPath string
 }
 
-func GetResource(req Request) (*Resource, error) {
+func getResource(req request) (*resource, error) {
 	if req.ID == "res2" {
-		return &Resource{
+		return &resource{
 			ID:      req.ID,
 			AbsPath: "./some/malformed/absolute/path/data.json", // malformed absolute filepath to simulate a "bug"
 		}, nil
 	} else if req.ID == "res3" {
-		return &Resource{
+		return &resource{
 			ID:      req.ID,
 			AbsPath: "/some/correct/path/data.json",
 		}, nil
 	}
 
-	return nil, errors.Wrapf(ErrNotFound, "failed to get resource '%v'", req.ID)
+	return nil, errors.Wrapf(errNotFound, "failed to get resource '%v'", req.ID)
 }
 
-func GetRelPath(base string, path string) (string, error) {
+func getRelPath(base string, path string) (string, error) {
 	relPath, err := filepath.Rel(base, path)
 	if err != nil {
 		// it's generally useful to wrap external errors with a type that you know how to handle
 		// first (e.g. ErrInternalServer). this will help if/when you want to do error inspection
 		// via eris.Is(err, ErrInternalServer) or eris.Cause(err).
-		return "", eris.Wrap(ErrInternalServer, err.Error())
+		return "", eris.Wrap(errInternalServer, err.Error())
 	}
 	return relPath, nil
 }
 
-type Response struct {
+type response struct {
 	RelPath string
 }
 
-func ProcessResource(req Request) (*Response, error) {
-	if err := req.Validate(); err != nil {
+func processResource(req request) (*response, error) {
+	if err := req.validate(); err != nil {
 		// simply return the error if there's no additional context
 		return nil, err
 	}
 
-	resource, err := GetResource(req)
+	resource, err := getResource(req)
 	if err != nil {
 		return nil, err
 	}
 
 	// do some processing on the data
-	relPath, err := GetRelPath("/Users/roti/", resource.AbsPath)
+	relPath, err := getRelPath("/Users/roti/", resource.AbsPath)
 	if err != nil {
 		// wrap the error if you want to add more context
 		return nil, eris.Wrapf(err, "failed to get relative path for resource '%v'", resource.ID)
 	}
 
-	return &Response{
+	return &response{
 		RelPath: relPath,
 	}, nil
 }
 
-type LogReq struct {
+type logReq struct {
 	Method string
-	Req    Request
-	Res    *Response
+	Req    request
+	Res    *response
 	Err    error
 }
 
-func LogRequest(logger *logrus.Logger, logReq LogReq) {
+func logRequest(logger *logrus.Logger, logReq logReq) {
 	fields := logrus.Fields{
 		"method": logReq.Method,
 	}
@@ -123,7 +123,7 @@ func main() {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 
 	// example requests
-	reqs := []Request{
+	reqs := []request{
 		{
 			ID: "", // bad request
 		},
@@ -140,10 +140,10 @@ func main() {
 
 	// process the example requests and log the results
 	for _, req := range reqs {
-		res, err := ProcessResource(req)
+		res, err := processResource(req)
 		if req.ID != "res1" {
 			// log the eris error
-			LogRequest(logger, LogReq{
+			logRequest(logger, logReq{
 				Method: "ProcessResource",
 				Req:    req,
 				Res:    res,

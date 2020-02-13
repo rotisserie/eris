@@ -15,20 +15,20 @@ func init() {
 	flag.StringVar(&dsn, "dsn", "", "Sentry DSN for logging stack traces")
 }
 
-func Example() error {
+func example() error {
 	return eris.New("test")
 }
 
-func WrapExample() error {
-	err := Example()
+func wrapExample() error {
+	err := example()
 	if err != nil {
 		return eris.Wrap(err, "wrap 1")
 	}
 	return nil
 }
 
-func WrapSecondExample() error {
-	err := WrapExample()
+func wrapSecondExample() error {
+	err := wrapExample()
 	if err != nil {
 		return eris.Wrap(err, "wrap 2")
 	}
@@ -41,12 +41,15 @@ func main() {
 		log.Fatal("Sentry DSN is a required flag, please pass it with '-dsn'")
 	}
 
-	err := WrapSecondExample()
+	err := wrapSecondExample()
 	err = eris.Wrap(err, "wrap 3")
 
-	sentry.Init(sentry.ClientOptions{
+	initErr := sentry.Init(sentry.ClientOptions{
 		Dsn: dsn,
 	})
+	if initErr != nil {
+		log.Fatalf("failed to initialize Sentry: %v", initErr)
+	}
 
 	sentry.CaptureException(err)
 	sentry.Flush(time.Second * 5)

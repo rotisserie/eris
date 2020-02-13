@@ -48,9 +48,11 @@ func wrap(err error, msg string) error {
 		return nil
 	}
 
-	// callers(4) skips this method, Wrap(f), stack.callers, and runtime.Callers
+	// callers(4) skips runtime.Callers, stack.callers, this method, and Wrap(f)
 	stack := callers(4)
-	frame := caller(4)
+	// caller(3) skips stack.caller, this method, and Wrap(f)
+	// caller(skip) has a slightly different meaning which is why it's not 4 as above
+	frame := caller(3)
 	switch e := err.(type) {
 	case *rootError:
 		if e.global {
@@ -60,6 +62,9 @@ func wrap(err error, msg string) error {
 				msg:    e.msg,
 				stack:  stack,
 			}
+		} else {
+			// insert the frame into the stack
+			e.stack.insertPC(*stack)
 		}
 	case *wrapError:
 		// insert the frame into the stack
