@@ -1,4 +1,20 @@
 
+<a name="v0.3.0"></a>
+## [v0.3.0](https://github.com/rotisserie/eris/compare/v0.2.1...v0.3.0) (2020-02-13)
+
+### Bug Fixes
+
+* return correct stack for local/global vars and add stack tests ([#74](https://github.com/rotisserie/eris/issues/74))
+
+### Code Refactoring
+
+* insert frames during error wrapping instead of unpacking ([#70](https://github.com/rotisserie/eris/issues/70))
+
+### Features
+
+* allow error output and stack trace inversion ([#73](https://github.com/rotisserie/eris/issues/73))
+
+
 <a name="v0.2.1"></a>
 ## [v0.2.1](https://github.com/rotisserie/eris/compare/v0.2.0...v0.2.1) (2020-01-28)
 
