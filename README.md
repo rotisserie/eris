@@ -294,7 +294,7 @@ runtime.goexit
 
 Migrating to `eris` should be a very simple process. If it doesn't offer something that you currently use from existing error packages, feel free to submit an issue to us. If you don't want to refactor all of your error handling yet, `eris` should work relatively seamlessly with your existing error types. Please submit an issue if this isn't the case for some reason.
 
-Many of your dependencies will likely still use [pkg/errors](https://github.com/pkg/errors) for error handling. Currently, when external error types are wrapped with additional context, the original error is flattened (via `err.Error()`) and used to create a root error. This adds a stack trace for the error and allows it to function more seamlessly with the rest of the `eris` package. However, we're looking into potentially integrating with other error packages to unwrap and format external errors.
+Many of your dependencies will likely still use [pkg/errors](https://github.com/pkg/errors) for error handling. When external types are wrapped with additional context, `eris` attempts to unwrap them to build a new error chain. If an error type doesn't implement the unwrapping interface, the original error is flattened (via `err.Error()`) and used to create a new root error instead.
 
 ## Contributing
 
