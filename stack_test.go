@@ -1,6 +1,8 @@
 package eris_test
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -8,26 +10,39 @@ import (
 )
 
 const (
-	file           = "eris/stack_test.go"
-	readFunc       = "eris_test.ReadFile"
-	parseFunc      = "eris_test.ParseFile"
-	processFunc    = "eris_test.ProcessFile"
-	globalTestFunc = "eris_test.TestGlobalStack"
-	localTestFunc  = "eris_test.TestLocalStack"
+	file              = "eris/stack_test.go"
+	readFunc          = "eris_test.ReadFile"
+	parseFunc         = "eris_test.ParseFile"
+	processFunc       = "eris_test.ProcessFile"
+	globalTestFunc    = "eris_test.TestGlobalStack"
+	localTestFunc     = "eris_test.TestLocalStack"
+	extGlobalTestFunc = "eris_test.TestExtGlobalStack"
+	extLocalTestFunc  = "eris_test.TestExtLocalStack"
+)
+
+var (
+	errEOF = eris.New("unexpected EOF")
+	errExt = errors.New("external error")
 )
 
 // example func that either returns a wrapped global or creates/wraps a new local error
-func ReadFile(fname string, global bool) error {
-	if global {
-		return eris.Wrapf(ErrUnexpectedEOF, "error reading file '%v'", fname)
+func ReadFile(fname string, global bool, external bool) error {
+	var err error
+	if !external && !global { // local eris
+		err = eris.New("unexpected EOF")
+	} else if !external && global { // global eris
+		err = errEOF
+	} else if external && !global { // local external
+		err = fmt.Errorf("external context: %w", errors.New("external error"))
+	} else { // global external
+		err = fmt.Errorf("external context: %w", errExt)
 	}
-	err := eris.New("unexpected EOF")
 	return eris.Wrapf(err, "error reading file '%v'", fname)
 }
 
 // example func that just catches and returns an error
-func ParseFile(fname string, global bool) error {
-	err := ReadFile(fname, global)
+func ParseFile(fname string, global bool, external bool) error {
+	err := ReadFile(fname, global, external)
 	if err != nil {
 		return err
 	}
@@ -35,9 +50,9 @@ func ParseFile(fname string, global bool) error {
 }
 
 // example func that wraps an error with additional context
-func ProcessFile(fname string, global bool) error {
+func ProcessFile(fname string, global bool, external bool) error {
 	// parse the file
-	err := ParseFile(fname, global)
+	err := ParseFile(fname, global, external)
 	if err != nil {
 		return eris.Wrapf(err, "error processing file '%v'", fname)
 	}
@@ -47,18 +62,18 @@ func ProcessFile(fname string, global bool) error {
 func TestGlobalStack(t *testing.T) {
 	// expected results
 	expectedChain := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 22},
-		{Name: processFunc, File: file, Line: 42},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: processFunc, File: file, Line: 57},
 	}
 	expectedRoot := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 22},
-		{Name: parseFunc, File: file, Line: 30},
-		{Name: processFunc, File: file, Line: 40},
-		{Name: processFunc, File: file, Line: 42},
-		{Name: globalTestFunc, File: file, Line: 61},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: processFunc, File: file, Line: 57},
+		{Name: globalTestFunc, File: file, Line: 76},
 	}
 
-	err := ProcessFile("example.json", true)
+	err := ProcessFile("example.json", true, false)
 	uerr := eris.Unpack(err)
 	validateWrapFrames(t, expectedChain, uerr)
 	validateRootStack(t, expectedRoot, uerr)
@@ -67,19 +82,61 @@ func TestGlobalStack(t *testing.T) {
 func TestLocalStack(t *testing.T) {
 	// expected results
 	expectedChain := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 25},
-		{Name: processFunc, File: file, Line: 42},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: processFunc, File: file, Line: 57},
 	}
 	expectedRoot := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 24},
-		{Name: readFunc, File: file, Line: 25},
-		{Name: parseFunc, File: file, Line: 30},
-		{Name: processFunc, File: file, Line: 40},
-		{Name: processFunc, File: file, Line: 42},
-		{Name: localTestFunc, File: file, Line: 82},
+		{Name: readFunc, File: file, Line: 32},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: processFunc, File: file, Line: 57},
+		{Name: localTestFunc, File: file, Line: 97},
 	}
 
-	err := ProcessFile("example.json", false)
+	err := ProcessFile("example.json", false, false)
+	uerr := eris.Unpack(err)
+	validateWrapFrames(t, expectedChain, uerr)
+	validateRootStack(t, expectedRoot, uerr)
+}
+
+func TestExtGlobalStack(t *testing.T) {
+	// expected results
+	expectedChain := []eris.StackFrame{
+		{Name: readFunc, File: file, Line: 40},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: processFunc, File: file, Line: 57},
+	}
+	expectedRoot := []eris.StackFrame{
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: processFunc, File: file, Line: 57},
+		{Name: extGlobalTestFunc, File: file, Line: 118},
+	}
+
+	err := ProcessFile("example.json", true, true)
+	uerr := eris.Unpack(err)
+	validateWrapFrames(t, expectedChain, uerr)
+	validateRootStack(t, expectedRoot, uerr)
+}
+
+func TestExtLocalStack(t *testing.T) {
+	// expected results
+	expectedChain := []eris.StackFrame{
+		{Name: readFunc, File: file, Line: 40},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: processFunc, File: file, Line: 57},
+	}
+	expectedRoot := []eris.StackFrame{
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: processFunc, File: file, Line: 57},
+		{Name: extLocalTestFunc, File: file, Line: 139},
+	}
+
+	err := ProcessFile("example.json", false, true)
 	uerr := eris.Unpack(err)
 	validateWrapFrames(t, expectedChain, uerr)
 	validateRootStack(t, expectedRoot, uerr)

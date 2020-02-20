@@ -30,8 +30,10 @@ func Errorf(format string, args ...interface{}) error {
 //
 // This method behaves differently for each error type. For root errors, the stack trace is reset to the current
 // callers which ensures traces are correct when using global/sentinel error values. Wrapped error types are simply
-// wrapped with the new context. For external types (i.e. something other than root or wrap errors), a new root
-// error is created for the original error and then it's wrapped with the additional context.
+// wrapped with the new context. For external types (i.e. something other than root or wrap errors), this method
+// attempts to unwrap them while building a new error chain. If an external type does not implement the unwrap
+// interface, it flattens the error and creates a new root error from it before wrapping with the additional
+// context.
 func Wrap(err error, msg string) error {
 	return wrap(err, msg)
 }
@@ -72,9 +74,34 @@ func wrap(err error, msg string) error {
 			root.stack.insertPC(*stack)
 		}
 	default:
+		// attempt to unwrap external errors while building a new error chain or fallback to flattening them
+		var errStr []string
+		for e != nil {
+			str := e.Error()
+			errStr = append([]string{str}, errStr...)
+			e = Unwrap(e)
+			// unwrap twice for pkg/errors and other libraries like it
+			if e != nil && e.Error() == str {
+				e = Unwrap(e)
+			}
+		}
 		err = &rootError{
-			msg:   e.Error(),
+			msg:   errStr[0],
 			stack: stack,
+		}
+		for i := 1; i < len(errStr); i++ {
+			// parse the current layer's message by substracting the other layers
+			// note: this assumes delimiters are two characters like ": "
+			var layerMsg string
+			msgCutoff := len(errStr[i]) - len(errStr[i-1]) - 2
+			if msgCutoff >= 0 {
+				layerMsg = errStr[i][:msgCutoff]
+			}
+			err = &wrapError{
+				msg:   layerMsg,
+				err:   err,
+				frame: frame,
+			}
 		}
 	}
 
