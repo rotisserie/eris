@@ -13,11 +13,11 @@
 //
 // Creating errors
 //
-// Creating errors is simple via eris.New and eris.NewGlobal.
+// Creating errors is simple via eris.New.
 //
 //   var (
 //     // global error values can be useful when wrapping errors or inspecting error types
-//     ErrInternalServer = eris.NewGlobal("error internal server")
+//     ErrInternalServer = eris.New("error internal server")
 //   )
 //
 //   func (req *Request) Validate() error {
@@ -67,16 +67,16 @@
 //     "root":{
 //       "message":"error bad request", // root cause
 //       "stack":[
-//         "eris_test.(*Request).Validate:.../example_logger_test.go:25", // location of the root
-//         "eris_test.(*Request).Validate:.../example_logger_test.go:26", // location of Wrap call
-//         "eris_test.ProcessResource:.../example_logger_test.go:68",
-//         "eris_test.Example_logger:.../example_logger_test.go:140",
+//         "main.main:.../example.go:143", // original calling method
+//         "main.ProcessResource:.../example.go:71",
+//         "main.(*Request).Validate:.../example.go:29", // location of Wrap call
+//         "main.(*Request).Validate:.../example.go:28" // location of the root
 //       ]
 //     },
 //     "wrap":[
 //       {
 //         "message":"received a request with no ID", // additional context
-//         "stack":"eris_test.(*Request).Validate:.../example_logger_test.go:26" // location of Wrap call
+//         "stack":"main.(*Request).Validate:.../example.go:29" // location of Wrap call
 //       }
 //     ]
 //   }
