@@ -1,6 +1,6 @@
 # eris ![Logo][eris-logo]
 
-[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![GoReport][report-img]][report] [![Discord][chat-img]][chat] [![Mentioned in Awesome Go][awesome-img]][awesome]
+[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![GoReport][report-img]][report] [![Discord][chat-img]][chat] [![Mentioned in Awesome Go][awesome-img]][awesome] [![Sourcegraph][sourcegraph-img]][sourcegraph]
 
 Package `eris` provides a better way to handle, trace, and log errors in Go.
 
@@ -68,7 +68,7 @@ Many of the methods in this package will look familiar if you've used [pkg/error
 
 ### Creating errors
 
-Creating errors is simple via [`eris.New`](https://godoc.org/github.com/rotisserie/eris#New).
+Creating errors is simple via [`eris.New`](https://pkg.go.dev/github.com/rotisserie/eris#New).
 
 ```golang
 var (
@@ -87,7 +87,7 @@ func (req *Request) Validate() error {
 
 ### Wrapping errors
 
-[`eris.Wrap`](https://godoc.org/github.com/rotisserie/eris#Wrap) adds context to an error while preserving the original error.
+[`eris.Wrap`](https://pkg.go.dev/github.com/rotisserie/eris#Wrap) adds context to an error while preserving the original error.
 
 ```golang
 relPath, err := GetRelPath("/Users/roti/", resource.AbsPath)
@@ -99,7 +99,7 @@ if err != nil {
 
 ### Formatting and logging errors
 
-[`eris.ToString`](https://godoc.org/github.com/rotisserie/eris#ToString) and [`eris.ToJSON`](https://godoc.org/github.com/rotisserie/eris#ToJSON) should be used to log errors with the default format (shown above). The JSON method returns a `map[string]interface{}` type for compatibility with Go's `encoding/json` package and many common JSON loggers (e.g. [logrus](https://github.com/sirupsen/logrus)).
+[`eris.ToString`](https://pkg.go.dev/github.com/rotisserie/eris#ToString) and [`eris.ToJSON`](https://pkg.go.dev/github.com/rotisserie/eris#ToJSON) should be used to log errors with the default format (shown above). The JSON method returns a `map[string]interface{}` type for compatibility with Go's `encoding/json` package and many common JSON loggers (e.g. [logrus](https://github.com/sirupsen/logrus)).
 
 ```golang
 // format the error to JSON with the default format and stack traces enabled
@@ -165,7 +165,7 @@ fmt.Println(formattedStr)
 
 ### Inspecting errors
 
-The `eris` package provides a couple ways to inspect and compare error types. [`eris.Is`](https://godoc.org/github.com/rotisserie/eris#Is) returns true if a particular error appears anywhere in the error chain. Currently, it works simply by comparing error messages with each other. If an error contains a particular message (e.g. `"error not found"`) anywhere in its chain, it's defined to be that error type.
+The `eris` package provides a couple ways to inspect and compare error types. [`eris.Is`](https://pkg.go.dev/github.com/rotisserie/eris#Is) returns true if a particular error appears anywhere in the error chain. Currently, it works simply by comparing error messages with each other. If an error contains a particular message (e.g. `"error not found"`) anywhere in its chain, it's defined to be that error type.
 
 ```golang
 ErrNotFound := eris.New("error not found")
@@ -177,7 +177,7 @@ if eris.Is(err, ErrNotFound) {
 }
 ```
 
-[`eris.Cause`](https://godoc.org/github.com/rotisserie/eris#Cause) unwraps an error until it reaches the cause, which is defined as the first (i.e. root) error in the chain.
+[`eris.Cause`](https://pkg.go.dev/github.com/rotisserie/eris#Cause) unwraps an error until it reaches the cause, which is defined as the first (i.e. root) error in the chain.
 
 ```golang
 ErrNotFound := eris.New("error not found")
@@ -191,7 +191,7 @@ if eris.Cause(err) == ErrNotFound {
 
 ### Formatting with custom separators
 
-For users who need more control over the error output, `eris` allows for some control over the separators between each piece of the output via the [`eris.Format`](https://godoc.org/github.com/rotisserie/eris#Format) type. If this isn't flexible enough for your needs, see the [custom output format](#writing-a-custom-output-format) section below. To format errors with custom separators, you can define and pass a format object to [`eris.ToCustomString`](https://godoc.org/github.com/rotisserie/eris#ToCustomString) or [`eris.ToCustomJSON`](https://godoc.org/github.com/rotisserie/eris#ToCustomJSON).
+For users who need more control over the error output, `eris` allows for some control over the separators between each piece of the output via the [`eris.Format`](https://pkg.go.dev/github.com/rotisserie/eris#Format) type. If this isn't flexible enough for your needs, see the [custom output format](#writing-a-custom-output-format) section below. To format errors with custom separators, you can define and pass a format object to [`eris.ToCustomString`](https://pkg.go.dev/github.com/rotisserie/eris#ToCustomString) or [`eris.ToCustomJSON`](https://pkg.go.dev/github.com/rotisserie/eris#ToCustomJSON).
 
 ```golang
 // format the error to a string with custom separators
@@ -217,7 +217,7 @@ fmt.Println(formattedStr)
 
 ### Writing a custom output format
 
-`eris` also allows advanced users to construct custom error strings or objects in case the default error doesn't fit their requirements. The [`UnpackedError`](https://godoc.org/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrRoot` and `ErrChain` fields correspond to the root error and wrap error chain, respectively. If any other error type is unpacked, it will appear in the `ExternalErr` field. You can access all of the information contained in an error via [`eris.Unpack`](https://godoc.org/github.com/rotisserie/eris#Unpack).
+`eris` also allows advanced users to construct custom error strings or objects in case the default error doesn't fit their requirements. The [`UnpackedError`](https://pkg.go.dev/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrRoot` and `ErrChain` fields correspond to the root error and wrap error chain, respectively. If any other error type is unpacked, it will appear in the `ExternalErr` field. You can access all of the information contained in an error via [`eris.Unpack`](https://pkg.go.dev/github.com/rotisserie/eris#Unpack).
 
 ```golang
 // get the unpacked error object
@@ -307,7 +307,7 @@ Released under the [MIT License].
 [MIT License]: LICENSE.txt
 [eris-logo]: https://cdn.emojidex.com/emoji/hdpi/minecraft_golden_apple.png?1511637499
 [doc-img]: https://img.shields.io/badge/godoc-eris-blue
-[doc]: https://godoc.org/github.com/rotisserie/eris
+[doc]: https://pkg.go.dev/github.com/rotisserie/eris
 [ci-img]: https://github.com/rotisserie/eris/workflows/eris/badge.svg
 [ci]: https://github.com/rotisserie/eris/actions
 [cov-img]: https://codecov.io/gh/rotisserie/eris/branch/master/graph/badge.svg
@@ -318,3 +318,5 @@ Released under the [MIT License].
 [chat]: https://discord.gg/gMfXeXR
 [awesome-img]: https://awesome.re/mentioned-badge.svg
 [awesome]: https://github.com/avelino/awesome-go#error-handling
+[sourcegraph-img]: https://img.shields.io/sourcegraph/rrc/github.com/rotisserie/eris?color=%231f80c1&logo=sourcegraph&logoColor=%231f80c1
+[sourcegraph]: https://sourcegraph.com/github.com/rotisserie/eris?badge
