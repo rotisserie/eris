@@ -53,6 +53,11 @@ test:
 	@echo Running tests
 	@go test -race -v .
 
+## Run benchmark tests
+bench:
+	@echo Running benchmark tests
+	@cd benchmark && go test -benchmem -bench=. && cd ..
+
 ## Run the tests with coverage
 test-coverage:
 	@echo Running tests with coverage
