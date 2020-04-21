@@ -9,6 +9,7 @@ type FormatOptions struct {
 	InvertOutput bool // Flag that inverts the error output (wrap errors shown first).
 	WithTrace    bool // Flag that enables stack trace output.
 	InvertTrace  bool // Flag that inverts the stack trace output (top of call stack shown first).
+	WithExternal bool // Flag that enables external error output.
 	// todo: maybe allow users to hide wrap frames if desired
 }
 
@@ -52,7 +53,8 @@ func NewDefaultStringFormat(options FormatOptions) StringFormat {
 //     <Method1>:<File1>:<Line1>
 func ToString(err error, withTrace bool) string {
 	return ToCustomString(err, NewDefaultStringFormat(FormatOptions{
-		WithTrace: withTrace,
+		WithTrace:    withTrace,
+		WithExternal: true,
 	}))
 }
 
@@ -73,13 +75,14 @@ func ToString(err error, withTrace bool) string {
 func ToCustomString(err error, format StringFormat) string {
 	upErr := Unpack(err)
 
-	// return early if this is a third-party error
-	if upErr.ExternalErr != "" {
-		return fmt.Sprint(upErr.ExternalErr)
-	}
-
 	var str string
 	if format.Options.InvertOutput {
+		if format.Options.WithExternal && upErr.ErrExternal != nil {
+			str += formatExternalStr(upErr.ErrExternal, format.Options.WithTrace)
+			if (format.Options.WithTrace && len(upErr.ErrRoot.Stack) > 0) || upErr.ErrRoot.Msg != "" {
+				str += format.ErrorSep
+			}
+		}
 		str += upErr.ErrRoot.formatStr(format)
 		for _, eLink := range upErr.ErrChain {
 			str += format.ErrorSep + eLink.formatStr(format)
@@ -89,6 +92,12 @@ func ToCustomString(err error, format StringFormat) string {
 			str += upErr.ErrChain[i].formatStr(format) + format.ErrorSep
 		}
 		str += upErr.ErrRoot.formatStr(format)
+		if format.Options.WithExternal && upErr.ErrExternal != nil {
+			if (format.Options.WithTrace && len(upErr.ErrRoot.Stack) > 0) || upErr.ErrRoot.Msg != "" {
+				str += format.ErrorSep
+			}
+			str += formatExternalStr(upErr.ErrExternal, format.Options.WithTrace)
+		}
 	}
 
 	return str
@@ -143,7 +152,8 @@ func NewDefaultJSONFormat(options FormatOptions) JSONFormat {
 //   }
 func ToJSON(err error, withTrace bool) map[string]interface{} {
 	return ToCustomJSON(err, NewDefaultJSONFormat(FormatOptions{
-		WithTrace: withTrace,
+		WithTrace:    withTrace,
+		WithExternal: true,
 	}))
 }
 
@@ -183,11 +193,9 @@ func ToJSON(err error, withTrace bool) map[string]interface{} {
 func ToCustomJSON(err error, format JSONFormat) map[string]interface{} {
 	upErr := Unpack(err)
 
-	// return early if this is a third-party error
 	jsonMap := make(map[string]interface{})
-	if upErr.ExternalErr != "" {
-		jsonMap["external"] = fmt.Sprint(upErr.ExternalErr)
-		return jsonMap
+	if format.Options.WithExternal && upErr.ErrExternal != nil {
+		jsonMap["external"] = formatExternalStr(upErr.ErrExternal, format.Options.WithTrace)
 	}
 
 	if upErr.ErrRoot.Msg != "" || len(upErr.ErrRoot.Stack) > 0 {
@@ -224,7 +232,8 @@ func Unpack(err error) UnpackedError {
 			link.Frame = err.frame.get()
 			upErr.ErrChain = append([]ErrLink{link}, upErr.ErrChain...)
 		default:
-			upErr.ExternalErr = err.Error()
+			upErr.ErrExternal = err
+			return upErr
 		}
 		err = Unwrap(err)
 	}
@@ -237,9 +246,17 @@ func Unpack(err error) UnpackedError {
 // from any error type. The ErrChain and ErrRoot fields correspond to `wrapError` and `rootError` types,
 // respectively. If any other error type is unpacked, it will appear in the ExternalErr field.
 type UnpackedError struct {
+	ErrExternal error
 	ErrRoot     ErrRoot
 	ErrChain    []ErrLink
-	ExternalErr string
+}
+
+// String formatter for external errors.
+func formatExternalStr(err error, withTrace bool) string {
+	if withTrace {
+		return fmt.Sprintf("%+v", err)
+	}
+	return fmt.Sprint(err)
 }
 
 // ErrRoot represents an error stack and the accompanying message.
@@ -248,10 +265,8 @@ type ErrRoot struct {
 	Stack Stack
 }
 
+// String formatter for root errors.
 func (err *ErrRoot) formatStr(format StringFormat) string {
-	if err.Msg == "" {
-		return ""
-	}
 	str := err.Msg + format.MsgStackSep
 	if format.Options.WithTrace {
 		stackArr := err.Stack.format(format.StackElemSep, format.Options.InvertTrace)
@@ -265,6 +280,7 @@ func (err *ErrRoot) formatStr(format StringFormat) string {
 	return str
 }
 
+// JSON formatter for root errors.
 func (err *ErrRoot) formatJSON(format JSONFormat) map[string]interface{} {
 	rootMap := make(map[string]interface{})
 	rootMap["message"] = fmt.Sprint(err.Msg)
@@ -280,6 +296,7 @@ type ErrLink struct {
 	Frame StackFrame
 }
 
+// String formatter for wrap errors chains.
 func (eLink *ErrLink) formatStr(format StringFormat) string {
 	str := eLink.Msg + format.MsgStackSep
 	if format.Options.WithTrace {
@@ -288,6 +305,7 @@ func (eLink *ErrLink) formatStr(format StringFormat) string {
 	return str
 }
 
+// JSON formatter for wrap error chains.
 func (eLink *ErrLink) formatJSON(format JSONFormat) map[string]interface{} {
 	wrapMap := make(map[string]interface{})
 	wrapMap["message"] = fmt.Sprint(eLink.Msg)
