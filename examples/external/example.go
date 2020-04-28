@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	pkgerrors "github.com/pkg/errors"
@@ -39,4 +40,7 @@ func processResource(id string) error {
 func main() {
 	err := processResource("res1")
 	fmt.Printf("%+v\n", err)
+	jsonErr := eris.ToJSON(err, true)
+	jsonStr, _ := json.Marshal(jsonErr)
+	fmt.Printf("%v\n", string(jsonStr))
 }

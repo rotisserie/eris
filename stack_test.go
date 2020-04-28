@@ -103,8 +103,6 @@ func TestLocalStack(t *testing.T) {
 func TestExtGlobalStack(t *testing.T) {
 	// expected results
 	expectedChain := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: readFunc, File: file, Line: 40},
 		{Name: processFunc, File: file, Line: 57},
 	}
 	expectedRoot := []eris.StackFrame{
@@ -112,7 +110,7 @@ func TestExtGlobalStack(t *testing.T) {
 		{Name: parseFunc, File: file, Line: 45},
 		{Name: processFunc, File: file, Line: 55},
 		{Name: processFunc, File: file, Line: 57},
-		{Name: extGlobalTestFunc, File: file, Line: 118},
+		{Name: extGlobalTestFunc, File: file, Line: 116},
 	}
 
 	err := ProcessFile("example.json", true, true)
@@ -124,8 +122,6 @@ func TestExtGlobalStack(t *testing.T) {
 func TestExtLocalStack(t *testing.T) {
 	// expected results
 	expectedChain := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: readFunc, File: file, Line: 40},
 		{Name: processFunc, File: file, Line: 57},
 	}
 	expectedRoot := []eris.StackFrame{
@@ -133,7 +129,7 @@ func TestExtLocalStack(t *testing.T) {
 		{Name: parseFunc, File: file, Line: 45},
 		{Name: processFunc, File: file, Line: 55},
 		{Name: processFunc, File: file, Line: 57},
-		{Name: extLocalTestFunc, File: file, Line: 139},
+		{Name: extLocalTestFunc, File: file, Line: 135},
 	}
 
 	err := ProcessFile("example.json", false, true)

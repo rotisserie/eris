@@ -16,6 +16,39 @@ var (
 	formattedGlobalErr = eris.Errorf("%v global error", "formatted")
 )
 
+type withMessage struct {
+	msg string
+}
+
+func (e withMessage) Error() string { return e.msg }
+func (e withMessage) Is(target error) bool {
+	if err, ok := target.(withMessage); ok {
+		return e.msg == err.msg
+	}
+	return e.msg == target.Error()
+}
+
+type withLayer struct {
+	err error
+	msg string
+}
+
+func (e withLayer) Error() string { return e.msg + ": " + e.err.Error() }
+func (e withLayer) Unwrap() error { return e.err }
+func (e withLayer) Is(target error) bool {
+	if err, ok := target.(withLayer); ok {
+		return e.msg == err.msg
+	}
+	return e.msg == target.Error()
+}
+
+type withEmptyLayer struct {
+	err error
+}
+
+func (e withEmptyLayer) Error() string { return e.err.Error() }
+func (e withEmptyLayer) Unwrap() error { return e.err }
+
 func setupTestCase(wrapf bool, cause error, input []string) error {
 	err := cause
 	for _, str := range input {
@@ -76,61 +109,63 @@ func TestErrorWrapping(t *testing.T) {
 	}
 }
 
-type withMessage struct {
-	msg string
-}
-
-func (e *withMessage) Error() string { return e.msg }
-
-type withLayer struct {
-	err error
-	msg string
-}
-
-func (e *withLayer) Error() string { return e.msg + ": " + e.err.Error() }
-func (e *withLayer) Unwrap() error { return e.err }
-
-type withEmptyLayer struct {
-	err error
-}
-
-func (e *withEmptyLayer) Error() string { return e.err.Error() }
-func (e *withEmptyLayer) Unwrap() error { return e.err }
-
 func TestExternalErrorWrapping(t *testing.T) {
 	tests := map[string]struct {
 		cause  error    // root error
 		input  []string // input for error wrapping
-		output error    // expected output
+		output []string // expected output
 	}{
 		"no error wrapping with a third-party root cause (errors.New)": {
-			cause:  errors.New("external error"),
-			output: eris.New("external error"),
+			cause: errors.New("external error"),
+			output: []string{
+				"external error",
+			},
 		},
 		"standard error wrapping with a third-party root cause (errors.New)": {
-			cause:  errors.New("external error"),
-			input:  []string{"additional context", "even more context"},
-			output: eris.Wrap(eris.Wrap(eris.New("external error"), "additional context"), "even more context"),
+			cause: errors.New("external error"),
+			input: []string{"additional context", "even more context"},
+			output: []string{
+				"even more context: additional context: external error",
+				"additional context: external error",
+				"external error",
+			},
 		},
 		"wrapping a wrapped third-party root cause (errors.New and fmt.Errorf)": {
-			cause:  fmt.Errorf("additional context: %w", errors.New("external error")),
-			input:  []string{"even more context"},
-			output: eris.Wrap(eris.Wrap(eris.New("external error"), "additional context"), "even more context"),
+			cause: fmt.Errorf("additional context: %w", errors.New("external error")),
+			input: []string{"even more context"},
+			output: []string{
+				"even more context: additional context: external error",
+				"additional context: external error",
+				"external error",
+			},
 		},
 		"wrapping a wrapped third-party root cause (multiple layers)": {
-			cause:  fmt.Errorf("even more context: %w", fmt.Errorf("additional context: %w", errors.New("external error"))),
-			input:  []string{"way too much context"},
-			output: eris.Wrap(eris.Wrap(eris.Wrap(eris.New("external error"), "additional context"), "even more context"), "way too much context"),
+			cause: fmt.Errorf("even more context: %w", fmt.Errorf("additional context: %w", errors.New("external error"))),
+			input: []string{"way too much context"},
+			output: []string{
+				"way too much context: even more context: additional context: external error",
+				"even more context: additional context: external error",
+				"additional context: external error",
+				"external error",
+			},
 		},
 		"wrapping a wrapped third-party root cause that contains an empty layer": {
-			cause:  fmt.Errorf(": %w", errors.New("external error")),
-			input:  []string{"even more context"},
-			output: eris.Wrap(eris.Wrap(eris.New("external error"), ""), "even more context"),
+			cause: fmt.Errorf(": %w", errors.New("external error")),
+			input: []string{"even more context"},
+			output: []string{
+				"even more context: : external error",
+				": external error",
+				"external error",
+			},
 		},
 		"wrapping a wrapped third-party root cause that contains an empty layer without a delimiter": {
-			cause:  fmt.Errorf(": %w", errors.New("external error")),
-			input:  []string{"even more context"},
-			output: eris.Wrap(eris.Wrap(eris.New("external error"), ""), "even more context"),
+			cause: fmt.Errorf("%w", errors.New("external error")),
+			input: []string{"even more context"},
+			output: []string{
+				"even more context: external error",
+				"external error",
+				"external error",
+			},
 		},
 		"wrapping a pkg/errors style error (contains layers without messages)": {
 			cause: &withLayer{ // var to mimic wrapping a pkg/errors style error
@@ -141,8 +176,13 @@ func TestExternalErrorWrapping(t *testing.T) {
 					},
 				},
 			},
-			input:  []string{"even more context"},
-			output: eris.Wrap(eris.Wrap(eris.New("external error"), "additional context"), "even more context"),
+			input: []string{"even more context"},
+			output: []string{
+				"even more context: additional context: external error",
+				"additional context: external error",
+				"external error",
+				"external error",
+			},
 		},
 	}
 
@@ -150,24 +190,20 @@ func TestExternalErrorWrapping(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			err := setupTestCase(false, tc.cause, tc.input)
 
-			// unwrap the actual and expected output to make sure external errors are actually wrapped properly
-			var inputErr, outputErr []string
+			// unwrap to make sure external errors are actually wrapped properly
+			var inputErr []string
 			for err != nil {
 				inputErr = append(inputErr, err.Error())
 				err = eris.Unwrap(err)
 			}
-			for tc.output != nil {
-				outputErr = append(outputErr, tc.output.Error())
-				tc.output = eris.Unwrap(tc.output)
-			}
 
 			// compare each layer of the actual and expected output
-			if len(inputErr) != len(outputErr) {
-				t.Fatalf("%v: expected output to have '%v' layers but got '%v': { %#v } got { %#v }", desc, len(outputErr), len(inputErr), outputErr, inputErr)
+			if len(inputErr) != len(tc.output) {
+				t.Fatalf("%v: expected output to have '%v' layers but got '%v': { %#v } got { %#v }", desc, len(tc.output), len(inputErr), tc.output, inputErr)
 			}
 			for i := 0; i < len(inputErr); i++ {
-				if inputErr[i] != outputErr[i] {
-					t.Errorf("%v: expected { %#v } got { %#v }", desc, inputErr[i], outputErr[i])
+				if inputErr[i] != tc.output[i] {
+					t.Errorf("%v: expected { %#v } got { %#v }", desc, inputErr[i], tc.output[i])
 				}
 			}
 		})
@@ -198,6 +234,17 @@ func TestErrorUnwrap(t *testing.T) {
 				"external error",
 			},
 		},
+		"unwrapping error with external root cause (custom type)": {
+			cause: &withMessage{
+				msg: "external error",
+			},
+			input: []string{"additional context", "even more context"},
+			output: []string{
+				"even more context: additional context: external error",
+				"additional context: external error",
+				"external error",
+			},
+		},
 	}
 
 	for desc, tc := range tests {
@@ -216,6 +263,16 @@ func TestErrorUnwrap(t *testing.T) {
 }
 
 func TestErrorIs(t *testing.T) {
+	externalErr := errors.New("external error")
+	customErr := withLayer{
+		msg: "additional context",
+		err: withEmptyLayer{
+			err: withMessage{
+				msg: "external error",
+			},
+		},
+	}
+
 	tests := map[string]struct {
 		cause   error    // root error
 		input   []string // input for error wrapping
@@ -246,9 +303,9 @@ func TestErrorIs(t *testing.T) {
 			output:  true,
 		},
 		"root error (external)": {
-			cause:   errors.New("external error"),
+			cause:   externalErr,
 			input:   []string{"additional context", "even more context"},
-			compare: eris.New("external error"),
+			compare: externalErr,
 			output:  true,
 		},
 		"wrapped error from global root error": {
@@ -258,10 +315,24 @@ func TestErrorIs(t *testing.T) {
 			output:  true,
 		},
 		"comparing against external error": {
-			cause:   errors.New("external error"),
+			cause:   externalErr,
 			input:   []string{"additional context", "even more context"},
-			compare: errors.New("external error"),
+			compare: externalErr,
 			output:  true,
+		},
+		"comparing against custom error type": {
+			cause:   customErr,
+			input:   []string{"even more context"},
+			compare: customErr,
+			output:  true,
+		},
+		"comparing against custom error type (copied error)": {
+			cause: customErr,
+			input: []string{"even more context"},
+			compare: &withMessage{
+				msg: "external error",
+			},
+			output: true,
 		},
 		"comparing against nil error": {
 			cause:   eris.New("root error"),
@@ -294,6 +365,10 @@ func TestErrorIs(t *testing.T) {
 
 func TestErrorCause(t *testing.T) {
 	globalErr := eris.New("global error")
+	extErr := errors.New("external error")
+	customErr := withMessage{
+		msg: "external error",
+	}
 
 	tests := map[string]struct {
 		cause  error    // root error
@@ -304,6 +379,16 @@ func TestErrorCause(t *testing.T) {
 			cause:  globalErr,
 			input:  []string{"additional context", "even more context"},
 			output: globalErr,
+		},
+		"external error": {
+			cause:  extErr,
+			input:  []string{"additional context", "even more context"},
+			output: extErr,
+		},
+		"external error (custom type)": {
+			cause:  customErr,
+			input:  []string{"additional context", "even more context"},
+			output: customErr,
 		},
 		"nil error": {
 			cause:  nil,
@@ -317,6 +402,81 @@ func TestErrorCause(t *testing.T) {
 			cause := eris.Cause(err)
 			if tc.output != eris.Cause(err) {
 				t.Errorf("%v: expected { %v } got { %v }", desc, tc.output, cause)
+			}
+		})
+	}
+}
+
+func TestErrorAs(t *testing.T) {
+	cause := withMessage{
+		msg: "external error",
+	}
+	empty := withEmptyLayer{
+		err: cause,
+	}
+	layer := withLayer{
+		msg: "additional context",
+		err: empty,
+	}
+
+	tests := map[string]struct {
+		cause   error    // root error
+		input   []string // input for error wrapping
+		results []bool   // comparison results
+		targets []error  // output results
+	}{
+		"external cause": {
+			cause:   cause,
+			input:   []string{"even more context"},
+			results: []bool{true, false, false},
+			targets: []error{cause, nil, nil},
+		},
+		"external error with empty layer": {
+			cause:   empty,
+			input:   []string{"even more context"},
+			results: []bool{true, true, false},
+			targets: []error{cause, empty, nil},
+		},
+		"external error with multiple layers": {
+			cause:   layer,
+			input:   []string{"even more context"},
+			results: []bool{true, true, true},
+			targets: []error{cause, empty, layer},
+		},
+	}
+
+	for desc, tc := range tests {
+		t.Run(desc, func(t *testing.T) {
+			err := setupTestCase(false, tc.cause, tc.input)
+
+			msgTarget := withMessage{}
+			msgResult := errors.As(err, &msgTarget)
+			if tc.results[0] != msgResult {
+				t.Errorf("%v: expected errors.As('%v', &withMessage{}) to return {'%v', '%v'} but got {'%v', '%v'}",
+					desc, err, tc.results[0], tc.targets[0], msgResult, msgTarget)
+			} else if msgResult == true && tc.targets[0] != msgTarget {
+				t.Errorf("%v: expected errors.As('%v', &withMessage{}) to return {'%v', '%v'} but got {'%v', '%v'}",
+					desc, err, tc.results[0], tc.targets[0], msgResult, msgTarget)
+			}
+
+			emptyTarget := withEmptyLayer{}
+			emptyResult := errors.As(err, &emptyTarget)
+			if tc.results[1] != emptyResult {
+				t.Errorf("%v: expected errors.As('%v', &withEmptyLayer{}) to return {'%v', '%v'} but got {'%v', '%v'}",
+					desc, err, tc.results[1], tc.targets[1], emptyResult, emptyTarget)
+			} else if emptyResult == true && tc.targets[1] != emptyTarget {
+				t.Errorf("%v: expected errors.As('%v', &withEmptyLayer{}) to return {'%v', '%v'} but got {'%v', '%v'}",
+					desc, err, tc.results[1], tc.targets[1], emptyResult, emptyTarget)
+			}
+
+			layerTarget := withLayer{}
+			layerResult := errors.As(err, &layerTarget)
+			if tc.results[2] != layerResult {
+				t.Errorf("%v: expected errors.As('%v', &withLayer{}) to return {'%v', '%v'} but got {'%v', '%v'}",
+					desc, err, tc.results[2], tc.targets[2], layerResult, layerTarget)
+			} else if layerResult == true && tc.targets[2] != layerTarget {
+				t.Errorf("%v: expected errors.As('%v', &withLayer{}) to return {'%v', '%v'} but got {'%v', '%v'}",
+					desc, err, tc.results[2], tc.targets[2], layerResult, layerTarget)
 			}
 		})
 	}

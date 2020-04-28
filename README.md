@@ -217,7 +217,7 @@ fmt.Println(formattedStr)
 
 ### Writing a custom output format
 
-`eris` also allows advanced users to construct custom error strings or objects in case the default error doesn't fit their requirements. The [`UnpackedError`](https://pkg.go.dev/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrRoot` and `ErrChain` fields correspond to the root error and wrap error chain, respectively. If any other error type is unpacked, it will appear in the `ExternalErr` field. You can access all of the information contained in an error via [`eris.Unpack`](https://pkg.go.dev/github.com/rotisserie/eris#Unpack).
+`eris` also allows advanced users to construct custom error strings or objects in case the default error doesn't fit their requirements. The [`UnpackedError`](https://pkg.go.dev/github.com/rotisserie/eris#UnpackedError) object provides a convenient and developer friendly way to store and access existing error traces. The `ErrRoot` and `ErrChain` fields correspond to the root error and wrap error chain, respectively. If a root error wraps an external error, that error will be default formatted and assigned to the `ErrExternal` field. If any other error type is unpacked, it will appear in the `ErrExternal` field. You can access all of the information contained in an error via [`eris.Unpack`](https://pkg.go.dev/github.com/rotisserie/eris#Unpack).
 
 ```golang
 // get the unpacked error object
@@ -294,7 +294,7 @@ runtime.goexit
 
 Migrating to `eris` should be a very simple process. If it doesn't offer something that you currently use from existing error packages, feel free to submit an issue to us. If you don't want to refactor all of your error handling yet, `eris` should work relatively seamlessly with your existing error types. Please submit an issue if this isn't the case for some reason.
 
-Many of your dependencies will likely still use [pkg/errors](https://github.com/pkg/errors) for error handling. When external types are wrapped with additional context, `eris` attempts to unwrap them to build a new error chain. If an error type doesn't implement the unwrapping interface, the original error is flattened (via `err.Error()`) and used to create a new root error instead.
+Many of your dependencies will likely still use [pkg/errors](https://github.com/pkg/errors) for error handling. When external error types are wrapped with additional context, `eris` creates a new root error that wraps the original external error. Because of this, error inspection should work seamlessly with other error libraries.
 
 ## Contributing
 

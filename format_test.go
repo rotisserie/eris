@@ -46,13 +46,11 @@ func TestUnpack(t *testing.T) {
 			cause: errors.New("external error"),
 			input: []string{"additional context", "even more context"},
 			output: eris.UnpackedError{
+				ErrExternal: errors.New("external error"),
 				ErrRoot: eris.ErrRoot{
-					Msg: "external error",
+					Msg: "additional context",
 				},
 				ErrChain: []eris.ErrLink{
-					{
-						Msg: "additional context",
-					},
 					{
 						Msg: "even more context",
 					},
@@ -70,7 +68,7 @@ func TestUnpack(t *testing.T) {
 		"no error wrapping with external root cause (errors.New)": {
 			cause: errors.New("external error"),
 			output: eris.UnpackedError{
-				ExternalErr: "external error",
+				ErrExternal: errors.New("external error"),
 			},
 		},
 	}
@@ -119,6 +117,10 @@ func TestFormatStr(t *testing.T) {
 			input:  eris.Wrap(eris.Wrap(eris.New("root error"), "additional context"), "even more context"),
 			output: "even more context: additional context: root error",
 		},
+		"external wrapped error": {
+			input:  eris.Wrap(errors.New("external error"), "additional context"),
+			output: "additional context: external error",
+		},
 		"external error": {
 			input:  errors.New("external error"),
 			output: "external error",
@@ -126,6 +128,14 @@ func TestFormatStr(t *testing.T) {
 		"empty error": {
 			input:  eris.New(""),
 			output: "",
+		},
+		"empty wrapped external error": {
+			input:  eris.Wrap(errors.New(""), "additional context"),
+			output: "additional context: ",
+		},
+		"empty wrapped error": {
+			input:  eris.Wrap(eris.New(""), "additional context"),
+			output: "additional context: ",
 		},
 	}
 	for desc, tt := range tests {
@@ -147,12 +157,29 @@ func TestInvertedFormatStr(t *testing.T) {
 			input:  eris.Wrap(eris.Wrap(eris.New("root error"), "additional context"), "even more context"),
 			output: "root error: additional context: even more context",
 		},
+		"external wrapped error": {
+			input:  eris.Wrap(errors.New("external error"), "additional context"),
+			output: "external error: additional context",
+		},
+		"external error": {
+			input:  errors.New("external error"),
+			output: "external error",
+		},
+		"empty wrapped external error": {
+			input:  eris.Wrap(errors.New(""), "additional context"),
+			output: ": additional context",
+		},
+		"empty wrapped error": {
+			input:  eris.Wrap(eris.New(""), "additional context"),
+			output: ": additional context",
+		},
 	}
 	for desc, tt := range tests {
 		// without trace
 		t.Run(desc, func(t *testing.T) {
 			format := eris.NewDefaultStringFormat(eris.FormatOptions{
 				InvertOutput: true,
+				WithExternal: true,
 			})
 			if got := eris.ToCustomString(tt.input, format); !reflect.DeepEqual(got, tt.output) {
 				t.Errorf("ToString() got\n'%v'\nwant\n'%v'", got, tt.output)
@@ -175,8 +202,8 @@ func TestFormatJSON(t *testing.T) {
 			output: `{"root":{"message":"root error"},"wrap":[{"message":"even more context"},{"message":"additional context"}]}`,
 		},
 		"external error": {
-			input:  errors.New("external error"),
-			output: `{"external":"external error"}`,
+			input:  eris.Wrap(errors.New("external error"), "additional context"),
+			output: `{"external":"external error","root":{"message":"additional context"}}`,
 		},
 	}
 	for desc, tt := range tests {

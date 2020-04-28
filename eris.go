@@ -74,34 +74,11 @@ func wrap(err error, msg string) error {
 			root.stack.insertPC(*stack)
 		}
 	default:
-		// attempt to unwrap external errors while building a new error chain or fallback to flattening them
-		var errStr []string
-		for e != nil {
-			str := e.Error()
-			errStr = append([]string{str}, errStr...)
-			e = Unwrap(e)
-			// unwrap twice for pkg/errors and other libraries like it
-			if e != nil && e.Error() == str {
-				e = Unwrap(e)
-			}
-		}
-		err = &rootError{
-			msg:   errStr[0],
+		// return a new root error that wraps the external error
+		return &rootError{
+			msg:   msg,
+			ext:   e,
 			stack: stack,
-		}
-		for i := 1; i < len(errStr); i++ {
-			// parse the current layer's message by substracting the other layers
-			// note: this assumes delimiters are two characters like ": "
-			var layerMsg string
-			msgCutoff := len(errStr[i]) - len(errStr[i-1]) - 2
-			if msgCutoff >= 0 {
-				layerMsg = errStr[i][:msgCutoff]
-			}
-			err = &wrapError{
-				msg:   layerMsg,
-				err:   err,
-				frame: frame,
-			}
 		}
 	}
 
@@ -175,9 +152,10 @@ func StackFrames(err error) []uintptr {
 }
 
 type rootError struct {
-	global bool
-	msg    string
-	stack  *stack
+	global bool   // flag indicating whether the error was declared globally
+	msg    string // root error message
+	ext    error  // error type for wrapping external errors
+	stack  *stack // root error stack trace
 }
 
 func (e *rootError) Error() string {
@@ -195,10 +173,14 @@ func (e *rootError) Is(target error) bool {
 	return e.msg == target.Error()
 }
 
+func (e *rootError) Unwrap() error {
+	return e.ext
+}
+
 type wrapError struct {
-	msg   string
-	err   error
-	frame *frame
+	msg   string // wrap error message
+	err   error  // error type representing the next error in the chain
+	frame *frame // wrap error stack frame
 }
 
 func (e *wrapError) Error() string {
