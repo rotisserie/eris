@@ -45,9 +45,14 @@ func caller(skip int) *frame {
 // frame is a single program counter of a stack frame.
 type frame uintptr
 
+// pc returns the program counter for a frame.
+func (f frame) pc() uintptr {
+	return uintptr(f) - 1
+}
+
 // get returns a human readable stack frame.
 func (f frame) get() StackFrame {
-	pc := uintptr(f) - 1
+	pc := f.pc()
 	frames := runtime.CallersFrames([]uintptr{pc})
 	frame, _ := frames.Next()
 
@@ -76,9 +81,7 @@ type stack []uintptr
 
 // insertPC inserts a wrap error program counter (pc) into the correct place of the root error stack trace.
 func (s *stack) insertPC(wrapPCs stack) {
-	if s == nil || len(wrapPCs) == 0 {
-		return
-	} else if len(wrapPCs) == 1 {
+	if len(wrapPCs) == 1 {
 		// append the pc to the end if there's only one
 		*s = append(*s, wrapPCs[0])
 		return
