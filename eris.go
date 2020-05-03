@@ -35,7 +35,7 @@ func Errorf(format string, args ...interface{}) error {
 // interface, it flattens the error and creates a new root error from it before wrapping with the additional
 // context.
 func Wrap(err error, msg string) error {
-	return wrap(err, msg)
+	return wrap(err, fmt.Sprint(msg))
 }
 
 // Wrapf adds additional context to all error types while maintaining the type of the original error.
@@ -144,9 +144,12 @@ func StackFrames(err error) []uintptr {
 	for err != nil {
 		switch err := err.(type) {
 		case *rootError:
-			return *err.stack
+			return err.StackFrames()
+		case *wrapError:
+			return err.StackFrames()
+		default:
+			return []uintptr{}
 		}
-		err = Unwrap(err)
 	}
 	return []uintptr{}
 }
@@ -177,6 +180,12 @@ func (e *rootError) Unwrap() error {
 	return e.ext
 }
 
+// StackFrames returns the trace of a root error in the form of a program counter slice.
+// This method is currently called by an external error tracing library (Sentry).
+func (e *rootError) StackFrames() []uintptr {
+	return *e.stack
+}
+
 type wrapError struct {
 	msg   string // wrap error message
 	err   error  // error type representing the next error in the chain
@@ -200,6 +209,12 @@ func (e *wrapError) Is(target error) bool {
 
 func (e *wrapError) Unwrap() error {
 	return e.err
+}
+
+// StackFrames returns the trace of a wrap error in the form of a program counter slice.
+// This method is currently called by an external error tracing library (Sentry).
+func (e *wrapError) StackFrames() []uintptr {
+	return []uintptr{e.frame.pc()}
 }
 
 func printError(err error, s fmt.State, verb rune) {

@@ -540,34 +540,48 @@ func getFrames(pc []uintptr) []eris.StackFrame {
 	return stackFrames
 }
 
+func getFrameFromLink(link eris.ErrLink) eris.Stack {
+	var stackFrames []eris.StackFrame
+	stackFrames = append(stackFrames, link.Frame)
+	return eris.Stack(stackFrames)
+}
+
 func TestStackFrames(t *testing.T) {
 	tests := map[string]struct {
-		cause error    // root error
-		input []string // input for error wrapping
+		cause     error    // root error
+		input     []string // input for error wrapping
+		isWrapErr bool     // flag for wrap error
 	}{
 		"root error": {
-			cause: eris.New("root error"),
+			cause:     eris.New("root error"),
+			isWrapErr: false,
 		},
 		"wrapped error": {
-			cause: eris.New("root error"),
-			input: []string{"additional context", "even more context"},
+			cause:     eris.New("root error"),
+			input:     []string{"additional context", "even more context"},
+			isWrapErr: true,
 		},
 		"external error": {
-			cause: errors.New("external error"),
+			cause:     errors.New("external error"),
+			isWrapErr: false,
 		},
 		"wrapped external error": {
-			cause: errors.New("external error"),
-			input: []string{"additional context", "even more context"},
+			cause:     errors.New("external error"),
+			input:     []string{"additional context", "even more context"},
+			isWrapErr: true,
 		},
 		"global root error": {
-			cause: globalErr,
+			cause:     globalErr,
+			isWrapErr: false,
 		},
 		"wrapped error from global root error": {
-			cause: globalErr,
-			input: []string{"additional context", "even more context"},
+			cause:     globalErr,
+			input:     []string{"additional context", "even more context"},
+			isWrapErr: true,
 		},
 		"nil error": {
-			cause: nil,
+			cause:     nil,
+			isWrapErr: false,
 		},
 	}
 
@@ -576,8 +590,11 @@ func TestStackFrames(t *testing.T) {
 			err := setupTestCase(false, tc.cause, tc.input)
 			uErr := eris.Unpack(err)
 			sFrames := eris.Stack(getFrames(eris.StackFrames(err)))
-			if !reflect.DeepEqual(uErr.ErrRoot.Stack, sFrames) {
-				t.Errorf("%v: expected { %v } got { %v }", desc, sFrames, uErr.ErrRoot.Stack)
+			if !tc.isWrapErr && !reflect.DeepEqual(uErr.ErrRoot.Stack, sFrames) {
+				t.Errorf("%v: expected { %v } got { %v }", desc, uErr.ErrRoot.Stack, sFrames)
+			}
+			if tc.isWrapErr && !reflect.DeepEqual(getFrameFromLink(uErr.ErrChain[0]), sFrames) {
+				t.Errorf("%v: expected { %v } got { %v }", desc, getFrameFromLink(uErr.ErrChain[0]), sFrames)
 			}
 		})
 	}
