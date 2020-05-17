@@ -177,6 +177,18 @@ if eris.Is(err, ErrNotFound) {
 }
 ```
 
+[`eris.As`](https://pkg.go.dev/github.com/rotisserie/eris#As) finds the first error in a chain that matches a given target. If there's a match, it sets the target to that error value and returns true.
+
+```golang
+var target *NotFoundError
+_, err := db.Get(id)
+// check if the error is a NotFoundError type
+if errors.As(err, &target) {
+    // err is a *NotFoundError and target is set to the error's value
+    return target
+}
+```
+
 [`eris.Cause`](https://pkg.go.dev/github.com/rotisserie/eris#Cause) unwraps an error until it reaches the cause, which is defined as the first (i.e. root) error in the chain.
 
 ```golang

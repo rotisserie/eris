@@ -126,6 +126,45 @@ func Is(err, target error) bool {
 	}
 }
 
+// As finds the first error in err's chain that matches target. If there's a match, it sets target to that error
+// value and returns true. Otherwise, it returns false.
+//
+// The chain consists of err itself followed by the sequence of errors obtained by repeatedly calling Unwrap.
+//
+// An error matches target if the error's concrete value is assignable to the value pointed to by target,
+// or if the error has a method As(interface{}) bool such that As(target) returns true.
+func As(err error, target interface{}) bool {
+	if target == nil || err == nil {
+		return false
+	}
+	val := reflect.ValueOf(target)
+	typ := val.Type()
+
+	// target must be a non-nil pointer
+	if typ.Kind() != reflect.Ptr || val.IsNil() {
+		return false
+	}
+
+	// *target must be interface or implement error
+	if e := typ.Elem(); e.Kind() != reflect.Interface && !e.Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+		return false
+	}
+
+	errType := reflect.TypeOf(err)
+	for {
+		if errType != reflect.TypeOf(&wrapError{}) && errType != reflect.TypeOf(&rootError{}) && reflect.TypeOf(err).AssignableTo(typ.Elem()) {
+			val.Elem().Set(reflect.ValueOf(err))
+			return true
+		}
+		if x, ok := err.(interface{ As(interface{}) bool }); ok && x.As(target) {
+			return true
+		}
+		if err = Unwrap(err); err == nil {
+			return false
+		}
+	}
+}
+
 // Cause returns the root cause of the error, which is defined as the first error in the chain. The original
 // error is returned if it does not implement `Unwrap() error` and nil is returned if the error is nil.
 func Cause(err error) error {
@@ -176,6 +215,17 @@ func (e *rootError) Is(target error) bool {
 	return e.msg == target.Error()
 }
 
+func (e *rootError) As(target interface{}) bool {
+	t := reflect.Indirect(reflect.ValueOf(target)).Interface()
+	if err, ok := t.(*rootError); ok {
+		if e.msg == err.msg {
+			reflect.ValueOf(target).Elem().Set(reflect.ValueOf(err))
+			return true
+		}
+	}
+	return false
+}
+
 func (e *rootError) Unwrap() error {
 	return e.ext
 }
@@ -205,6 +255,17 @@ func (e *wrapError) Is(target error) bool {
 		return e.msg == err.msg
 	}
 	return e.msg == target.Error()
+}
+
+func (e *wrapError) As(target interface{}) bool {
+	t := reflect.Indirect(reflect.ValueOf(target)).Interface()
+	if err, ok := t.(*wrapError); ok {
+		if e.msg == err.msg {
+			reflect.ValueOf(target).Elem().Set(reflect.ValueOf(err))
+			return true
+		}
+	}
+	return false
 }
 
 func (e *wrapError) Unwrap() error {
