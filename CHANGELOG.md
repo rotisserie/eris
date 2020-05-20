@@ -1,4 +1,17 @@
 
+<a name="v0.4.0"></a>
+## [v0.4.0](https://github.com/rotisserie/eris/compare/v0.3.0...v0.4.0) (2020-05-20)
+
+### Bug Fixes
+
+* add helper methods to show correct trace in sentry ([#85](https://github.com/rotisserie/eris/issues/85))
+
+### Features
+
+* wrap external errors instead of changing them to root errors ([#84](https://github.com/rotisserie/eris/issues/84))
+* try to unwrap external errors during error wrapping ([#80](https://github.com/rotisserie/eris/issues/80))
+
+
 <a name="v0.3.0"></a>
 ## [v0.3.0](https://github.com/rotisserie/eris/compare/v0.2.1...v0.3.0) (2020-02-13)
 
