@@ -81,7 +81,9 @@ type stack []uintptr
 
 // insertPC inserts a wrap error program counter (pc) into the correct place of the root error stack trace.
 func (s *stack) insertPC(wrapPCs stack) {
-	if len(wrapPCs) == 1 {
+	if len(wrapPCs) == 0 {
+		return
+	} else if len(wrapPCs) == 1 {
 		// append the pc to the end if there's only one
 		*s = append(*s, wrapPCs[0])
 		return

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rotisserie/eris"
 )
@@ -62,15 +63,15 @@ func ProcessFile(fname string, global bool, external bool) error {
 func TestGlobalStack(t *testing.T) {
 	// expected results
 	expectedChain := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: processFunc, File: file, Line: 57},
+		{Name: readFunc, File: file, Line: 41},
+		{Name: processFunc, File: file, Line: 58},
 	}
 	expectedRoot := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: processFunc, File: file, Line: 57},
-		{Name: globalTestFunc, File: file, Line: 76},
+		{Name: readFunc, File: file, Line: 41},
+		{Name: parseFunc, File: file, Line: 46},
+		{Name: processFunc, File: file, Line: 56},
+		{Name: processFunc, File: file, Line: 58},
+		{Name: globalTestFunc, File: file, Line: 77},
 	}
 
 	err := ProcessFile("example.json", true, false)
@@ -82,16 +83,16 @@ func TestGlobalStack(t *testing.T) {
 func TestLocalStack(t *testing.T) {
 	// expected results
 	expectedChain := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: processFunc, File: file, Line: 57},
+		{Name: readFunc, File: file, Line: 41},
+		{Name: processFunc, File: file, Line: 58},
 	}
 	expectedRoot := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 32},
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: processFunc, File: file, Line: 57},
-		{Name: localTestFunc, File: file, Line: 97},
+		{Name: readFunc, File: file, Line: 33},
+		{Name: readFunc, File: file, Line: 41},
+		{Name: parseFunc, File: file, Line: 46},
+		{Name: processFunc, File: file, Line: 56},
+		{Name: processFunc, File: file, Line: 58},
+		{Name: localTestFunc, File: file, Line: 98},
 	}
 
 	err := ProcessFile("example.json", false, false)
@@ -103,14 +104,14 @@ func TestLocalStack(t *testing.T) {
 func TestExtGlobalStack(t *testing.T) {
 	// expected results
 	expectedChain := []eris.StackFrame{
-		{Name: processFunc, File: file, Line: 57},
+		{Name: processFunc, File: file, Line: 58},
 	}
 	expectedRoot := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: processFunc, File: file, Line: 57},
-		{Name: extGlobalTestFunc, File: file, Line: 116},
+		{Name: readFunc, File: file, Line: 41},
+		{Name: parseFunc, File: file, Line: 46},
+		{Name: processFunc, File: file, Line: 56},
+		{Name: processFunc, File: file, Line: 58},
+		{Name: extGlobalTestFunc, File: file, Line: 117},
 	}
 
 	err := ProcessFile("example.json", true, true)
@@ -122,14 +123,14 @@ func TestExtGlobalStack(t *testing.T) {
 func TestExtLocalStack(t *testing.T) {
 	// expected results
 	expectedChain := []eris.StackFrame{
-		{Name: processFunc, File: file, Line: 57},
+		{Name: processFunc, File: file, Line: 58},
 	}
 	expectedRoot := []eris.StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: processFunc, File: file, Line: 57},
-		{Name: extLocalTestFunc, File: file, Line: 135},
+		{Name: readFunc, File: file, Line: 41},
+		{Name: parseFunc, File: file, Line: 46},
+		{Name: processFunc, File: file, Line: 56},
+		{Name: processFunc, File: file, Line: 58},
+		{Name: extLocalTestFunc, File: file, Line: 136},
 	}
 
 	err := ProcessFile("example.json", false, true)
@@ -176,4 +177,29 @@ func validateRootStack(t *testing.T, expectedRoot []eris.StackFrame, uerr eris.U
 			t.Errorf("%v: expected root line number { %v } got { %v }", localTestFunc, expectedRoot[i].Line, uerr.ErrRoot.Stack[i].Line)
 		}
 	}
+}
+
+func TestGoRoutines(t *testing.T) {
+	expectedChain := []eris.StackFrame{
+		{Name: "eris_test.TestGoRoutines.func1", File: file, Line: 192},
+	}
+	expectedRoot := []eris.StackFrame{
+		{Name: "eris_test.dummyStack", File: file, Line: 204},
+	}
+
+	go func() {
+		err := dummyStack()
+		err = eris.Wrap(err, "error reading file")
+
+		// verify the stack frames match expected values
+		uerr := eris.Unpack(err)
+		validateWrapFrames(t, expectedChain, uerr)
+		validateRootStack(t, expectedRoot, uerr)
+	}()
+
+	time.Sleep(250 * time.Millisecond)
+}
+
+func dummyStack() error {
+	return eris.New("unexpected EOF")
 }
