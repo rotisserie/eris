@@ -1,4 +1,12 @@
 
+<a name="v0.4.1"></a>
+## [v0.4.1](https://github.com/rotisserie/eris/compare/v0.4.0...v0.4.1) (2020-07-08)
+
+### Bug Fixes
+
+* check for zero length wrapPCs when inserting into stacks ([#92](https://github.com/rotisserie/eris/issues/92))
+
+
 <a name="v0.4.0"></a>
 ## [v0.4.0](https://github.com/rotisserie/eris/compare/v0.3.0...v0.4.0) (2020-05-20)
 
