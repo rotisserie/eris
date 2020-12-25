@@ -1,4 +1,12 @@
 
+<a name="v0.5.0"></a>
+## [v0.5.0](https://github.com/rotisserie/eris/compare/v0.4.1...v0.5.0) (2020-12-25)
+
+### Features
+
+* provide error assertion with As function ([#90](https://github.com/rotisserie/eris/issues/90))
+
+
 <a name="v0.4.1"></a>
 ## [v0.4.1](https://github.com/rotisserie/eris/compare/v0.4.0...v0.4.1) (2020-07-08)
 
