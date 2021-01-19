@@ -1,4 +1,4 @@
-name: test-coverage
+name: coverage
 
 on:
   push:
@@ -13,8 +13,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         go-version: [1.15.x]
-        
-    name: go-test-cover
+
+    name: go-coverage
     runs-on: ${{ matrix.os }}
 
     steps:
