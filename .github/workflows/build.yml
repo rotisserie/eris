@@ -1,0 +1,31 @@
+name: build
+
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        go-version: [1.14.x, 1.15.x]
+        
+    name: go-build
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      
+      - name: Build the code
+        run: make build

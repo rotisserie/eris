@@ -1,0 +1,34 @@
+name: test
+
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        go-version: [1.14.x, 1.15.x]
+        
+    name: go-test
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Run the tests   
+        run: make test
+
+      - name: Check test coverage
+        run: make test-coverage
