@@ -610,6 +610,26 @@ func TestExternalErrorAs(t *testing.T) {
 	}
 }
 
+type CustomErr struct{}
+
+func (CustomErr) Error() string {
+	return "custom error"
+}
+
+func TestCustomErrorAs(t *testing.T) {
+	original := CustomErr{}
+	wrap1 := eris.Wrap(original, "wrap1")
+	wrap2 := eris.Wrap(wrap1, "wrap2")
+
+	var customErr CustomErr
+	if !eris.As(wrap1, &customErr) {
+		t.Errorf("expected errors.As(wrap1, &customErr) to return true but got false")
+	}
+	if !eris.As(wrap2, &customErr) {
+		t.Errorf("expected errors.As(wrap2, &customErr) to return true but got false")
+	}
+}
+
 func TestErrorFormatting(t *testing.T) {
 	tests := map[string]struct {
 		cause  error    // root error
