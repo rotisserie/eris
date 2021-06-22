@@ -1,4 +1,12 @@
 
+<a name="v0.5.1"></a>
+## [v0.5.1](https://github.com/rotisserie/eris/compare/v0.5.0...v0.5.1) (2021-06-22)
+
+### Bug Fixes
+
+* move type reflection so As will work with external errors ([#100](https://github.com/rotisserie/eris/issues/100))
+
+
 <a name="v0.5.0"></a>
 ## [v0.5.0](https://github.com/rotisserie/eris/compare/v0.4.1...v0.5.0) (2020-12-25)
 
