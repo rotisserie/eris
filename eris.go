@@ -150,8 +150,8 @@ func As(err error, target interface{}) bool {
 		return false
 	}
 
-	errType := reflect.TypeOf(err)
 	for {
+		errType := reflect.TypeOf(err)
 		if errType != reflect.TypeOf(&wrapError{}) && errType != reflect.TypeOf(&rootError{}) && reflect.TypeOf(err).AssignableTo(typ.Elem()) {
 			val.Elem().Set(reflect.ValueOf(err))
 			return true
