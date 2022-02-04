@@ -1,3 +1,3 @@
 module github.com/rotisserie/eris
 
-go 1.15
+go 1.17
