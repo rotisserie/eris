@@ -1,6 +1,6 @@
 # eris ![Logo][eris-logo]
 
-[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![GoReport][report-img]][report] [![Discord][chat-img]][chat] [![Mentioned in Awesome Go][awesome-img]][awesome] [![Sourcegraph][sourcegraph-img]][sourcegraph]
+[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![GoReport][report-img]][report] [![Coverage Status][cov-img]][cov] [![Discord][chat-img]][chat]
 
 Package `eris` provides a better way to handle, trace, and log errors in Go.
 
@@ -8,7 +8,7 @@ Package `eris` provides a better way to handle, trace, and log errors in Go.
 
 <!-- toc -->
 
-- [Why you'll want to switch to eris](#why-youll-want-to-switch-to-eris)
+- [Why you should switch to eris](#why-you-should-switch-to-eris)
 - [Using eris](#using-eris)
   * [Creating errors](#creating-errors)
   * [Wrapping errors](#wrapping-errors)
@@ -26,11 +26,11 @@ Package `eris` provides a better way to handle, trace, and log errors in Go.
 
 <!-- tocstop -->
 
-## Why you'll want to switch to eris
+## Why you should switch to eris
 
-Named after the Greek goddess of strife and discord, this package is designed to give you more control over error handling via error wrapping, stack tracing, and output formatting. `eris` was inspired by a simple question: what if you could fix a bug without wasting time replicating the issue or digging through the code?
+This package was inspired by a simple question: what if you could fix a bug without wasting time replicating the issue or digging through the code? With that in mind, this package is designed to give you more control over error handling via error wrapping, stack tracing, and output formatting.
 
-`eris` is intended to help developers diagnose issues faster. The [example](https://github.com/rotisserie/eris/blob/master/examples/logging/example.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the top of the call stack to the source.
+The [example](https://github.com/rotisserie/eris/blob/master/examples/logging/example.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the top of the call stack to the source.
 
 ```json
 {
@@ -62,7 +62,7 @@ Named after the Greek goddess of strife and discord, this package is designed to
 }
 ```
 
-Many of the methods in this package will look familiar if you've used [pkg/errors](https://github.com/pkg/errors) or [xerrors](https://github.com/golang/xerrors), but `eris` employs some additional tricks during error wrapping and unwrapping that greatly improve the readability of the stack which should make debugging easier. This package also takes a unique approach to formatting errors that allows you to write custom formats that conform to your error or log aggregator of choice. You can find more information on the differences between `eris` and `pkg/errors` [here](#comparison-to-other-packages-eg-pkgerrors).
+Many of the methods in this package will look familiar if you've used [pkg/errors](https://github.com/pkg/errors) or [xerrors](https://github.com/golang/xerrors), but `eris` employs some additional tricks during error wrapping and unwrapping that greatly improve the readability of the stack trace. This package also takes a unique approach to formatting errors that allows you to write custom formats that conform to your error or log aggregator of choice. You can find more information on the differences between `eris` and `pkg/errors` [here](#comparison-to-other-packages-eg-pkgerrors).
 
 ## Using eris
 
@@ -322,13 +322,9 @@ Released under the [MIT License].
 [doc]: https://pkg.go.dev/github.com/rotisserie/eris
 [ci-img]: https://github.com/rotisserie/eris/workflows/eris/badge.svg
 [ci]: https://github.com/rotisserie/eris/actions
-[cov-img]: https://codecov.io/gh/rotisserie/eris/branch/master/graph/badge.svg
-[cov]: https://codecov.io/gh/rotisserie/eris
 [report-img]: https://goreportcard.com/badge/github.com/rotisserie/eris
 [report]: https://goreportcard.com/report/github.com/rotisserie/eris
+[cov-img]: https://codecov.io/gh/rotisserie/eris/branch/master/graph/badge.svg
+[cov]: https://codecov.io/gh/rotisserie/eris
 [chat-img]: https://img.shields.io/discord/659952923073183749?color=738adb&label=discord&logo=discord
 [chat]: https://discord.gg/gMfXeXR
-[awesome-img]: https://awesome.re/mentioned-badge.svg
-[awesome]: https://github.com/avelino/awesome-go#error-handling
-[sourcegraph-img]: https://img.shields.io/sourcegraph/rrc/github.com/rotisserie/eris?color=%231f80c1&logo=sourcegraph&logoColor=%231f80c1
-[sourcegraph]: https://sourcegraph.com/github.com/rotisserie/eris?badge
