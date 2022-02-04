@@ -28,7 +28,7 @@ Package `eris` provides a better way to handle, trace, and log errors in Go.
 
 ## Why you should switch to eris
 
-`eris` was inspired by a simple question: what if you could fix a bug without wasting time replicating the issue or digging through the code? With that in mind, this package is designed to give you more control over error handling via error wrapping, stack tracing, and output formatting.
+This package was inspired by a simple question: what if you could fix a bug without wasting time replicating the issue or digging through the code? With that in mind, this package is designed to give you more control over error handling via error wrapping, stack tracing, and output formatting.
 
 The [example](https://github.com/rotisserie/eris/blob/master/examples/logging/example.go) that generated the output below simulates a realistic error handling scenario and demonstrates how to wrap and log errors with minimal effort. This specific error occurred because a user tried to access a file that can't be located, and the output shows a clear path from the top of the call stack to the source.
 
