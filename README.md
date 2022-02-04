@@ -1,6 +1,6 @@
 # eris ![Logo][eris-logo]
 
-[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![GoReport][report-img]][report]
+[![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![GoReport][report-img]][report] [![Coverage Status][cov-img]][cov]
 
 Package `eris` provides a better way to handle, trace, and log errors in Go.
 
@@ -322,7 +322,7 @@ Released under the [MIT License].
 [doc]: https://pkg.go.dev/github.com/rotisserie/eris
 [ci-img]: https://github.com/rotisserie/eris/workflows/eris/badge.svg
 [ci]: https://github.com/rotisserie/eris/actions
-[cov-img]: https://codecov.io/gh/rotisserie/eris/branch/master/graph/badge.svg
-[cov]: https://codecov.io/gh/rotisserie/eris
 [report-img]: https://goreportcard.com/badge/github.com/rotisserie/eris
 [report]: https://goreportcard.com/report/github.com/rotisserie/eris
+[cov-img]: https://codecov.io/gh/rotisserie/eris/branch/master/graph/badge.svg
+[cov]: https://codecov.io/gh/rotisserie/eris
