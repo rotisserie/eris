@@ -15,7 +15,7 @@ var (
 )
 
 // Demonstrates JSON formatting of wrapped errors that originate from external (non-eris) error
-// types. You can try this example in the Go playground (https://play.golang.org/p/29yCByzK8wT).
+// types.
 func ExampleToJSON_external() {
 	// example func that returns an IO error
 	readFile := func(fname string) error {
@@ -42,8 +42,7 @@ func TestExampleToJSON_external(t *testing.T) {
 	ExampleToJSON_external()
 }
 
-// Demonstrates JSON formatting of wrapped errors that originate from global root errors. You can
-// try this example in the Go playground (https://play.golang.org/p/jkZHLfHsYHV).
+// Demonstrates JSON formatting of wrapped errors that originate from global root errors.
 func ExampleToJSON_global() {
 	// example func that wraps a global error value
 	readFile := func(fname string) error {
@@ -92,8 +91,7 @@ func TestExampleToJSON_global(t *testing.T) {
 }
 
 // Demonstrates JSON formatting of wrapped errors that originate from local root errors (created at
-// the source of the error via eris.New). You can try this example in the Go playground
-// (https://play.golang.org/p/66nsuoOgQWu).
+// the source of the error via eris.New).
 func ExampleToJSON_local() {
 	// example func that returns an eris error
 	readFile := func(fname string) error {
@@ -170,7 +168,7 @@ func TestExampleToJSON_local(t *testing.T) {
 }
 
 // Demonstrates string formatting of wrapped errors that originate from external (non-eris) error
-// types. You can try this example in the Go playground (https://play.golang.org/p/OKbU3gzIZvZ).
+// types.
 func ExampleToString_external() {
 	// example func that returns an IO error
 	readFile := func(fname string) error {
@@ -192,8 +190,7 @@ func TestExampleToString_external(t *testing.T) {
 	ExampleToString_external()
 }
 
-// Demonstrates string formatting of wrapped errors that originate from global root errors. You can
-// try this example in the Go playground (https://play.golang.org/p/8YgyDwk9xBJ).
+// Demonstrates string formatting of wrapped errors that originate from global root errors.
 func ExampleToString_global() {
 	// example func that wraps a global error value
 	readFile := func(fname string) error {
@@ -251,8 +248,7 @@ func TestExampleToString_global(t *testing.T) {
 }
 
 // Demonstrates string formatting of wrapped errors that originate from local root errors (created
-// at the source of the error via eris.New).  You can try this example in the Go playground
-// (https://play.golang.org/p/d49gTNx3OtA).
+// at the source of the error via eris.New).
 func ExampleToString_local() {
 	// example func that returns an eris error
 	readFile := func(fname string) error {
