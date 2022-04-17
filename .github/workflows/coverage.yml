@@ -1,34 +1,27 @@
 name: coverage
-
 on:
   push:
     tags:
       - v*
     branches:
       - master
-
+permissions:
+  contents: read
 jobs:
   test:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        go-version: [1.17.x]
-
+        go-version: [1.18.x]
     name: go-coverage
     runs-on: ${{ matrix.os }}
-
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v2
-
-      - name: Setup Go environment
-        uses: actions/setup-go@v2
+      - uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
-
+      - uses: actions/checkout@v2
       - name: Check test coverage
         run: make test-coverage
-
       - name: Upload coverage report to CodeCov
         uses: codecov/codecov-action@v1.0.0
         with:

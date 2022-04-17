@@ -320,7 +320,7 @@ Released under the [MIT License].
 [eris-logo]: https://cdn.emojidex.com/emoji/hdpi/minecraft_golden_apple.png?1511637499
 [doc-img]: https://img.shields.io/badge/godoc-eris-blue
 [doc]: https://pkg.go.dev/github.com/rotisserie/eris
-[ci-img]: https://github.com/rotisserie/eris/workflows/eris/badge.svg
+[ci-img]: https://github.com/rotisserie/eris/workflows/build/badge.svg
 [ci]: https://github.com/rotisserie/eris/actions
 [report-img]: https://goreportcard.com/badge/github.com/rotisserie/eris
 [report]: https://goreportcard.com/report/github.com/rotisserie/eris

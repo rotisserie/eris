@@ -40,11 +40,11 @@ func NewDefaultStringFormat(options FormatOptions) StringFormat {
 
 // ToString returns a default formatted string for a given error.
 //
-// An error without trace will be formatted as following:
+// An error without trace will be formatted as follows:
 //
 //   <Wrap error msg>: <Root error msg>
 //
-// An error with trace will be formatted as following:
+// An error with trace will be formatted as follows:
 //
 //   <Wrap error msg>
 //     <Method2>:<File2>:<Line2>
@@ -61,11 +61,11 @@ func ToString(err error, withTrace bool) string {
 // ToCustomString returns a custom formatted string for a given error.
 //
 // To declare custom format, the Format object has to be passed as an argument.
-// An error without trace will be formatted as following:
+// An error without trace will be formatted as follows:
 //
 //   <Wrap error msg>[Format.ErrorSep]<Root error msg>
 //
-// An error with trace will be formatted as following:
+// An error with trace will be formatted as follows:
 //
 //   <Wrap error msg>[Format.MsgStackSep]
 //   [Format.PreStackSep]<Method2>[Format.StackElemSep]<File2>[Format.StackElemSep]<Line2>[Format.ErrorSep]
@@ -120,7 +120,7 @@ func NewDefaultJSONFormat(options FormatOptions) JSONFormat {
 
 // ToJSON returns a JSON formatted map for a given error.
 //
-// An error without trace will be formatted as following:
+// An error without trace will be formatted as follows:
 //
 //   {
 //     "root": [
@@ -133,7 +133,7 @@ func NewDefaultJSONFormat(options FormatOptions) JSONFormat {
 //     }
 //   }
 //
-// An error with trace will be formatted as following:
+// An error with trace will be formatted as follows:
 //
 //   {
 //     "root": [
@@ -160,7 +160,7 @@ func ToJSON(err error, withTrace bool) map[string]interface{} {
 // ToCustomJSON returns a JSON formatted map for a given error.
 //
 // To declare custom format, the Format object has to be passed as an argument.
-// An error without trace will be formatted as following:
+// An error without trace will be formatted as follows:
 //
 //   {
 //     "root": {
@@ -173,7 +173,7 @@ func ToJSON(err error, withTrace bool) map[string]interface{} {
 //     ]
 //   }
 //
-// An error with trace will be formatted as following:
+// An error with trace will be formatted as follows:
 //
 //   {
 //     "root": {
