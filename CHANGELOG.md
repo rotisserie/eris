@@ -1,4 +1,8 @@
 
+<a name="v0.5.3"></a>
+## [v0.5.3](https://github.com/rotisserie/eris/compare/v0.5.2...v0.5.3) (2022-04-17)
+
+
 <a name="v0.5.2"></a>
 ## [v0.5.2](https://github.com/rotisserie/eris/compare/v0.5.1...v0.5.2) (2022-03-09)
 
