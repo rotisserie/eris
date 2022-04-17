@@ -318,7 +318,7 @@ Released under the [MIT License].
 
 [MIT License]: LICENSE.txt
 [eris-logo]: https://cdn.emojidex.com/emoji/hdpi/minecraft_golden_apple.png?1511637499
-[doc-img]: https://img.shields.io/badge/godoc-eris-blue
+[doc-img]: https://pkg.go.dev/badge/github.com/rotisserie/eris
 [doc]: https://pkg.go.dev/github.com/rotisserie/eris
 [ci-img]: https://github.com/rotisserie/eris/workflows/build/badge.svg
 [ci]: https://github.com/rotisserie/eris/actions
