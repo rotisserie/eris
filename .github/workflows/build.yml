@@ -1,5 +1,4 @@
 name: build
-
 on:
   push:
     tags:
@@ -7,25 +6,20 @@ on:
     branches:
       - master
   pull_request:
-
+permissions:
+  contents: read
 jobs:
   build:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        go-version: [1.16.x, 1.17.x]
-        
+        go-version: [1.17.x, 1.18.x]
     name: go-build
     runs-on: ${{ matrix.os }}
-
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
-
-      - name: Setup Go environment
-        uses: actions/setup-go@v2
+      - uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
-      
+      - uses: actions/checkout@v2
       - name: Build the code
         run: make build
