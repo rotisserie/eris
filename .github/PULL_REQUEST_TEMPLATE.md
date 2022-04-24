@@ -1,6 +1,6 @@
 ## Related issues
 
-Link any related Github issues here in the format of `closes #1`. If this change doesn't resolve an existing issue, please discuss it with us before submitting this PR. We're available on our [Discord server](https://discord.gg/gMfXeXR).
+Link any related Github issues here in the format of `closes #1`. If this change doesn't resolve an existing issue, please discuss it with us before submitting this PR.
 
 ## Proposed changes
 
