@@ -6,11 +6,11 @@ Thanks for taking the time to contribute. You're the best! Around! Nothing's gon
 
 ## Code of conduct
 
-This project is governed by the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). We want to cultivate a respectful and constructive environment for everyone involved, and we expect all other contributors to do the same. Please use Github's reporting features if you have any concerns or reach out to us directly via our [Discord server](https://discord.gg/gMfXeXR).
+This project is governed by the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). We want to cultivate a respectful and constructive environment for everyone involved, and we expect all other contributors to do the same. Please use Github's reporting features if you have any concerns.
 
 ## Asking general questions
 
-Discord is generally the fastest way to get in touch with us if you have general questions. We try to answer questions in a timely manner. If you have a bug report or feature request, feel free to discuss it with us there or just open an issue with as much detail as possible.
+We try to answer questions in a timely manner. If you have a bug report or feature request, feel free to open an issue with as much detail as possible.
 
 ## Ways to contribute
 
@@ -30,7 +30,7 @@ We use the [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/)
 * test (a change that only includes tests)
 * chore (a change to CI, etc)
 
-Lastly, make sure your commit is signed before submitting the pull request. If you're not sure how to do this, Github has helpful [instructions](https://help.github.com/en/github/authenticating-to-github/signing-commits) or you can ask us for help on Discord.
+Lastly, make sure your commit is signed before submitting the pull request. If you're not sure how to do this, Github has helpful [instructions](https://help.github.com/en/github/authenticating-to-github/signing-commits).
 
 ### Fixing bugs
 
@@ -38,7 +38,7 @@ Open a pull request with the patch, and please include a description that clearl
 
 ### Adding new features
 
-If you have an idea for a new feature, please first discuss it with us on Discord or submit a new issue tagged with the `enhancement` label. If we decide to adopt the feature, you're also welcome to submit a pull request if you have the time and inclination for it. Currently, we have no strict requirements around the design of new features. However, we ask that you try to follow the conventions of the current codebase, and feel free to discuss any design issues before submitting.
+If you have an idea for a new feature, please first discuss it with us by submitting a new issue tagged with the `enhancement` label. If we decide to adopt the feature, you're also welcome to submit a pull request if you have the time and inclination for it. Currently, we have no strict requirements around the design of new features. However, we ask that you try to follow the conventions of the current codebase, and feel free to discuss any design issues before submitting.
 
 ### Fixing whitespace, formatting code, or making purely cosmetic patches
 
