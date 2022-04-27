@@ -2,7 +2,7 @@
 
 [![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![GoReport][report-img]][report] [![Coverage Status][cov-img]][cov]
 
-Package `eris` is an error handling library with readable stack traces and JSON formatting support.
+Package `eris` is an error handling library with readable stack traces and flexible formatting support.
 
 `go get github.com/rotisserie/eris`
 

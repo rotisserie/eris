@@ -1,4 +1,4 @@
-// Package eris provides a better way to handle, trace, and log errors in Go.
+// Package eris is an error handling library with readable stack traces and flexible formatting support.
 package eris
 
 import (
