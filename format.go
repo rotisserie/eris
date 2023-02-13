@@ -123,32 +123,32 @@ func NewDefaultJSONFormat(options FormatOptions) JSONFormat {
 // An error without trace will be formatted as follows:
 //
 //   {
-//     "root": [
-//       {
+//     "root": {
 //         "message": "Root error msg"
+//     },
+//     "wrap": [
+//       {
+//         "message": "Wrap error msg"
 //       }
-//     ],
-//     "wrap": {
-//       "message": "Wrap error msg"
-//     }
+//     ]
 //   }
 //
 // An error with trace will be formatted as follows:
 //
 //   {
-//     "root": [
+//     "root": {
+//       "message": "Root error msg",
+//       "stack": [
+//         "<Method2>:<File2>:<Line2>",
+//         "<Method1>:<File1>:<Line1>"
+//       ]
+//     },
+//     "wrap": [
 //       {
-//         "message": "Root error msg",
-//         "stack": [
-//           "<Method2>:<File2>:<Line2>",
-//           "<Method1>:<File1>:<Line1>"
-//         ]
+//         "message": "Wrap error msg",
+//         "stack": "<Method2>:<File2>:<Line2>"
 //       }
-//     ],
-//     "wrap": {
-//       "message": "Wrap error msg",
-//       "stack": "<Method2>:<File2>:<Line2>"
-//     }
+//     ]
 //   }
 func ToJSON(err error, withTrace bool) map[string]interface{} {
 	return ToCustomJSON(err, NewDefaultJSONFormat(FormatOptions{
