@@ -1,4 +1,4 @@
-# eris ![Logo][eris-logo]
+# eris
 
 [![GoDoc][doc-img]][doc] [![Build][ci-img]][ci] [![GoReport][report-img]][report] [![Coverage Status][cov-img]][cov]
 
@@ -317,7 +317,6 @@ If you'd like to contribute to `eris`, we'd love your input! Please submit an is
 Released under the [MIT License].
 
 [MIT License]: LICENSE.txt
-[eris-logo]: https://cdn.emojidex.com/emoji/hdpi/minecraft_golden_apple.png?1511637499
 [doc-img]: https://pkg.go.dev/badge/github.com/rotisserie/eris
 [doc]: https://pkg.go.dev/github.com/rotisserie/eris
 [ci-img]: https://github.com/rotisserie/eris/workflows/build/badge.svg
